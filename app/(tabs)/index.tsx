@@ -1,98 +1,113 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import React from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 
 export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <View style={styles.inner}>
+        <Text style={styles.title}>Axon</Text>
+        <Text style={styles.subtitle}>Gestão Inteligente de Estímulos</Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <TextInput
+          style={styles.input}
+          placeholder="E-mail"
+          placeholderTextColor="#888"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Senha"
+          secureTextEntry={true}
+          placeholderTextColor="#888"
+        />
+
+        <TouchableOpacity style={styles.button} activeOpacity={0.7}>
+          <Text style={styles.buttonText}>Entrar</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.footerLink}>
+          <Text style={styles.footerText}>
+            Não tem uma conta? <Text style={styles.linkBold}>Cadastre-se</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  inner: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 30,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  title: {
+    fontSize: 48,
+    fontWeight: "bold",
+    color: "#fff",
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 50,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  input: {
+    width: "100%",
+    height: 55,
+    backgroundColor: "#111",
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    color: "#fff",
+    fontSize: 16,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  button: {
+    width: "100%",
+    height: 55,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  buttonText: {
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  footerLink: {
+    marginTop: 30,
+  },
+  footerText: {
+    color: "#666",
+    fontSize: 14,
+  },
+  linkBold: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
