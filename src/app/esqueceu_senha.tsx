@@ -12,6 +12,13 @@ import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const handleEnviar = () => {
+    // Aqui no futuro você fará a requisição para o seu backend Node
+    // para verificar se o código e o e-mail estão corretos.
+    
+    // Se estiver tudo certo, você redireciona o usuário:
+    router.replace('/nova_senha'); 
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -31,29 +38,17 @@ export default function HomeScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Senha"
-          secureTextEntry={true}
+          placeholder="Digite o código enviado"
+          keyboardType="numeric"
           placeholderTextColor="#888888"
         />
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          activeOpacity={0.7}
-          onPress={() => router.push('/esqueceu_senha')}
-        >
-          <Text style={styles.forgotText}>Esqueceu a senha?</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button} activeOpacity={0.7}>
-          <Text style={styles.buttonText}>Entrar</Text>
-        </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.footerLink}
-          onPress={() => router.push('/cadastro')}
+            style={styles.button} 
+            activeOpacity={0.7}
+            onPress={handleEnviar}
         >
-          <Text style={styles.footerText}>
-            Não tem uma conta? <Text style={styles.linkBold}>Cadastre-se</Text>
-          </Text>
+          <Text style={styles.buttonText}>Enviar</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -122,13 +117,4 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  forgotPassword: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginBottom: 10,
-  },
-  forgotText: {
-    color: "#666",
-    fontSize: 13,
-  }
 });

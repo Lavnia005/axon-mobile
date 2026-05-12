@@ -1,17 +1,20 @@
 import {
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const handleConfirmar = () => {
+    router.replace('/'); 
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -23,37 +26,23 @@ export default function HomeScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="E-mail"
-          placeholderTextColor="#888888"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
+          placeholder="Digite sua nova senha"
           secureTextEntry={true}
           placeholderTextColor="#888888"
         />
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          activeOpacity={0.7}
-          onPress={() => router.push('/esqueceu_senha')}
-        >
-          <Text style={styles.forgotText}>Esqueceu a senha?</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button} activeOpacity={0.7}>
-          <Text style={styles.buttonText}>Entrar</Text>
-        </TouchableOpacity>
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmar nova senha"
+          secureTextEntry={true}
+          placeholderTextColor="#888888"
+        />
 
         <TouchableOpacity 
-          style={styles.footerLink}
-          onPress={() => router.push('/cadastro')}
+            style={styles.button} 
+            activeOpacity={0.7}
+            onPress={handleConfirmar}
         >
-          <Text style={styles.footerText}>
-            Não tem uma conta? <Text style={styles.linkBold}>Cadastre-se</Text>
-          </Text>
+          <Text style={styles.buttonText}>Confirmar</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -122,13 +111,4 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  forgotPassword: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginBottom: 10,
-  },
-  forgotText: {
-    color: "#666",
-    fontSize: 13,
-  }
 });

@@ -8,10 +8,7 @@ import {
   View,
 } from "react-native";
 
-import { useRouter } from 'expo-router';
-
 export default function HomeScreen() {
-  const router = useRouter();
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -23,9 +20,33 @@ export default function HomeScreen() {
 
         <TextInput
           style={styles.input}
+          placeholder="Nome"
+          placeholderTextColor="#888888"
+          keyboardType="email-address"
+          autoCapitalize="sentences"
+        />
+
+        <TextInput
+          style={styles.input}
           placeholder="E-mail"
           placeholderTextColor="#888888"
           keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Data de nascimento"
+          placeholderTextColor="#888888"
+          keyboardType="numeric"
+          autoCapitalize="none"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder=" Telefone"
+          placeholderTextColor="#888888"
+          keyboardType="phone-pad"
           autoCapitalize="none"
         />
 
@@ -35,25 +56,16 @@ export default function HomeScreen() {
           secureTextEntry={true}
           placeholderTextColor="#888888"
         />
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          activeOpacity={0.7}
-          onPress={() => router.push('/esqueceu_senha')}
-        >
-          <Text style={styles.forgotText}>Esqueceu a senha?</Text>
-        </TouchableOpacity>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmar senha"
+          secureTextEntry={true}
+          placeholderTextColor="#888888"
+        />
 
         <TouchableOpacity style={styles.button} activeOpacity={0.7}>
-          <Text style={styles.buttonText}>Entrar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.footerLink}
-          onPress={() => router.push('/cadastro')}
-        >
-          <Text style={styles.footerText}>
-            Não tem uma conta? <Text style={styles.linkBold}>Cadastre-se</Text>
-          </Text>
+          <Text style={styles.buttonText}>Cadastre-se</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -87,7 +99,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
-    height: 45,
+    height: 30,
     backgroundColor: "#111",
     borderRadius: 12,
     paddingHorizontal: 20,
@@ -99,7 +111,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: "100%",
-    height: 50,
+    height: 45,
     backgroundColor: "#fff",
     borderRadius: 12,
     alignItems: "center",
@@ -122,13 +134,4 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  forgotPassword: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginBottom: 10,
-  },
-  forgotText: {
-    color: "#666",
-    fontSize: 13,
-  }
 });
