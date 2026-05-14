@@ -43,8 +43,11 @@ export default function HomeScreen() {
           <Text style={styles.forgotText}>Esqueceu a senha?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.button} activeOpacity={0.7}
+        onPress={() => router.push('/tabs/home')}
+        >
           <Text style={styles.buttonText}>Entrar</Text>
+          
         </TouchableOpacity>
 
         <TouchableOpacity 
