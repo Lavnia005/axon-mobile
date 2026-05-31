@@ -29,12 +29,12 @@ const meusGrupos = [
 export default function GruposScreen() {
   // Navega para a tela de descrição/detalhes do grupo (usando o [id].tsx)
   const handleVerDescricao = (id: string) => {
-    router.push({ pathname: "/tabs/grupos/[id]", params: { id } });
+    router.push({ pathname: "/grupos/[id]", params: { id } });
   };
 
   // Funções de navegação para as novas telas
-  const irParaCriarGrupo = () => router.push("/tabs/grupos/criar");
-  const irParaEntrarGrupo = () => router.push("/tabs/grupos/entrar");
+  const irParaCriarGrupo = () => router.push("/grupos/criar");
+  const irParaEntrarGrupo = () => router.push("/grupos/entrar");
 
   return (
     <SafeAreaView style={styles.container}>
