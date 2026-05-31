@@ -47,7 +47,7 @@ const homeGoals = goals.slice(0, 3);
 
 // Para visualização, substituir por dados reais posteriormente
 const rankings = [
-  { id: 1, name: "Marombas", pos: 1 },
+  { id: 1, name: "Inateleiros", pos: 1 },
   { id: 2, name: "Estudos", pos: 5 },
   { id: 3, name: "Academia", pos: 7 },
 ];

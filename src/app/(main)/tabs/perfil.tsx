@@ -48,7 +48,7 @@ export default function PerfilScreen() {
           {/* BOTÃO EDITAR - Dentro da caixa de infos como no esboço */}
           <TouchableOpacity 
             style={styles.editButton}
-            onPress={() => router.push('/tabs/perfil/editarPerfil')} // Rota para editar
+            onPress={() => router.push('/perfil/editarPerfil')} // Rota para editar
           >
             <Text style={styles.editButtonText}>Editar</Text>
           </TouchableOpacity>
