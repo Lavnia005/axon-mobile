@@ -1,3 +1,4 @@
+import React from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,59 +8,72 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useRouter } from 'expo-router';
-
-export default function HomeScreen() {
+export default function LoginScreen() {
   const router = useRouter();
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <View style={styles.inner}>
-        <Text style={styles.title}>Axon</Text>
-        <Text style={styles.subtitle}>Gestão Inteligente de Estímulos</Text>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboard}
+      >
+        <View style={styles.inner}>
+          <Text style={styles.title}>Axon</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="E-mail"
-          placeholderTextColor="#888888"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          secureTextEntry={true}
-          placeholderTextColor="#888888"
-        />
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          activeOpacity={0.7}
-          onPress={() => router.push('/esqueceu_senha')}
-        >
-          <Text style={styles.forgotText}>Esqueceu a senha?</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button} activeOpacity={0.7}
-        onPress={() => router.push('/tabs/home')}
-        >
-          <Text style={styles.buttonText}>Entrar</Text>
-          
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.footerLink}
-          onPress={() => router.push('/cadastro')}
-        >
-          <Text style={styles.footerText}>
-            Não tem uma conta? <Text style={styles.linkBold}>Cadastre-se</Text>
+          <Text style={styles.subtitle}>
+            Gestão Inteligente de Estímulos
           </Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+
+          <TextInput
+            style={styles.input}
+            placeholder="E-mail"
+            placeholderTextColor="#888888"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Senha"
+            secureTextEntry
+            placeholderTextColor="#888888"
+          />
+
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            activeOpacity={0.7}
+            onPress={() => router.push("/esqueceu_senha")}
+          >
+            <Text style={styles.forgotText}>
+              Esqueceu a senha?
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            activeOpacity={0.7}
+            onPress={() => router.replace("/tabs/home")}
+          >
+            <Text style={styles.buttonText}>Entrar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.footerLink}
+            onPress={() => router.push("/cadastro")}
+          >
+            <Text style={styles.footerText}>
+              Não tem uma conta?{" "}
+              <Text style={styles.linkBold}>
+                Cadastre-se
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -68,12 +82,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
+
+  keyboard: {
+    flex: 1,
+  },
+
   inner: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 30,
+    paddingHorizontal: 30,
   },
+
   title: {
     fontSize: 48,
     fontWeight: "bold",
@@ -81,13 +101,16 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 5,
   },
+
   subtitle: {
     fontSize: 12,
     color: "#666",
     marginBottom: 50,
     textTransform: "uppercase",
     letterSpacing: 1,
+    textAlign: "center",
   },
+
   input: {
     width: "100%",
     height: 45,
@@ -100,6 +123,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#333",
   },
+
+  forgotPassword: {
+    width: "100%",
+    alignItems: "flex-end",
+    marginBottom: 10,
+  },
+
+  forgotText: {
+    color: "#666",
+    fontSize: 13,
+  },
+
   button: {
     width: "100%",
     height: 50,
@@ -109,29 +144,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 20,
   },
+
   buttonText: {
     color: "#000",
     fontWeight: "bold",
     fontSize: 16,
   },
+
   footerLink: {
     marginTop: 30,
   },
+
   footerText: {
     color: "#666",
     fontSize: 14,
   },
+
   linkBold: {
     color: "#fff",
     fontWeight: "bold",
   },
-  forgotPassword: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginBottom: 10,
-  },
-  forgotText: {
-    color: "#666",
-    fontSize: 13,
-  }
 });
