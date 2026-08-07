@@ -1,3 +1,4 @@
+import React from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,51 +8,56 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useRouter } from 'expo-router';
-
-export default function HomeScreen() {
+export default function EsqueceuSenhaScreen() {
   const router = useRouter();
+
   const handleEnviar = () => {
-    // Aqui no futuro você fará a requisição para o seu backend Node
-    // para verificar se o código e o e-mail estão corretos.
-    
-    // Se estiver tudo certo, você redireciona o usuário:
-    router.replace('/nova_senha'); 
+    router.replace("/nova_senha");
   };
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <View style={styles.inner}>
-        <Text style={styles.title}>Axon</Text>
-        <Text style={styles.subtitle}>Gestão Inteligente de Estímulos</Text>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboard}
+      >
+        <View style={styles.inner}>
+          <Text style={styles.title}>Axon</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="E-mail"
-          placeholderTextColor="#888888"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+          <Text style={styles.subtitle}>
+            Gestão Inteligente de Estímulos
+          </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Digite o código enviado"
-          keyboardType="numeric"
-          placeholderTextColor="#888888"
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="E-mail"
+            placeholderTextColor="#888888"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-        <TouchableOpacity 
-            style={styles.button} 
+          <TextInput
+            style={styles.input}
+            placeholder="Digite o código enviado"
+            keyboardType="numeric"
+            placeholderTextColor="#888888"
+          />
+
+          <TouchableOpacity
+            style={styles.button}
             activeOpacity={0.7}
             onPress={handleEnviar}
-        >
-          <Text style={styles.buttonText}>Enviar</Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+          >
+            <Text style={styles.buttonText}>
+              Enviar
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -60,12 +66,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
+
+  keyboard: {
+    flex: 1,
+  },
+
   inner: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 30,
+    paddingHorizontal: 30,
   },
+
   title: {
     fontSize: 48,
     fontWeight: "bold",
@@ -73,13 +85,16 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 5,
   },
+
   subtitle: {
     fontSize: 12,
     color: "#666",
     marginBottom: 50,
     textTransform: "uppercase",
     letterSpacing: 1,
+    textAlign: "center",
   },
+
   input: {
     width: "100%",
     height: 45,
@@ -92,6 +107,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#333",
   },
+
   button: {
     width: "100%",
     height: 50,
@@ -101,20 +117,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 20,
   },
+
   buttonText: {
     color: "#000",
     fontWeight: "bold",
     fontSize: 16,
   },
-  footerLink: {
-    marginTop: 30,
-  },
-  footerText: {
-    color: "#666",
-    fontSize: 14,
-  },
-  linkBold: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  
 });
