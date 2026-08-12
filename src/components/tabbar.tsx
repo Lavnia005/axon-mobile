@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, usePathname } from "expo-router";
 
@@ -16,36 +11,11 @@ type Tab = {
 };
 
 const tabs: Tab[] = [
-  {
-    label: "Home",
-    icon: "home-outline",
-    iconActive: "home",
-    route: "/tabs/home",
-  },
-  {
-    label: "Objetivos",
-    icon: "flag-outline",
-    iconActive: "flag",
-    route: "/tabs/objetivos",
-  },
-  {
-    label: "Grupos",
-    icon: "people-outline",
-    iconActive: "people",
-    route: "/tabs/grupos",
-  },
-  {
-    label: "Ranking",
-    icon: "trophy-outline",
-    iconActive: "trophy",
-    route: "/tabs/ranking",
-  },
-  {
-    label: "Perfil",
-    icon: "person-outline",
-    iconActive: "person",
-    route: "/tabs/perfil",
-  },
+  { label: "Home",      icon: "home-outline",         iconActive: "home",           route: "/tabs/home" },
+  { label: "Objetivos", icon: "flag-outline",          iconActive: "flag",           route: "/tabs/objetivos" },
+  { label: "Grupos",    icon: "people-outline",        iconActive: "people",         route: "/tabs/grupos" },
+  { label: "Ranking",   icon: "trophy-outline",        iconActive: "trophy",         route: "/tabs/ranking" },
+  { label: "Perfil",    icon: "person-outline",        iconActive: "person",         route: "/tabs/perfil" },
 ];
 
 export default function TabBar() {
@@ -56,7 +26,6 @@ export default function TabBar() {
     <View style={styles.container}>
       {tabs.map((tab) => {
         const isActive = pathname.startsWith(tab.route);
-
         return (
           <TouchableOpacity
             key={tab.route}
@@ -66,19 +35,12 @@ export default function TabBar() {
           >
             <Ionicons
               name={isActive ? tab.iconActive : tab.icon}
-              size={24}
-              color={isActive ? "#fff" : "#777"}
+              size={22}
+              color={isActive ? "#fff" : "#444"}
             />
-
-            <Text
-              style={[
-                styles.label,
-                isActive && styles.labelActive,
-              ]}
-            >
+            <Text style={[styles.label, isActive && styles.labelActive]}>
               {tab.label}
             </Text>
-
             {isActive && <View style={styles.dot} />}
           </TouchableOpacity>
         );
@@ -93,45 +55,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#111111",
     borderTopWidth: 1,
     borderTopColor: "#1f1f1f",
-
-    paddingTop: 8,
-    paddingBottom: 8,
-
+    paddingBottom: 24, // safe area iOS
+    paddingTop: 10,
     paddingHorizontal: 8,
   },
-
   tab: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-
-    paddingVertical: 5,
-
+    gap: 4,
+    paddingVertical: 4,
     position: "relative",
   },
-
   label: {
-    fontSize: 11,
-    color: "#777",
+    fontSize: 10,
+    color: "#444",
     fontWeight: "500",
-    marginTop: 4,
   },
-
   labelActive: {
     color: "#fff",
-    fontWeight: "700",
   },
-
   dot: {
     position: "absolute",
-
-    bottom: -2,
-
+    bottom: -4,
     width: 4,
     height: 4,
-
     borderRadius: 2,
-
     backgroundColor: "#fff",
   },
 });
