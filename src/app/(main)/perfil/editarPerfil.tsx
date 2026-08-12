@@ -16,7 +16,7 @@ export default function EditarPerfilScreen() {
     <SafeAreaView style={styles.container}>
       {/* HEADER SIMPLES */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace("/tabs/perfil")}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close" size={28} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Editar Perfil</Text>
@@ -68,7 +68,7 @@ export default function EditarPerfilScreen() {
           style={styles.saveButton}
           onPress={() => {
             // Aqui entraria a lógica de salvar no banco de dados
-            router.replace("/tabs/perfil");
+            router.back();
           }}
         >
           <Text style={styles.saveButtonText}>Salvar</Text>

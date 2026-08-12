@@ -9,6 +9,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
+// Dados simulados (Mock) - No futuro virão do Banco de Dados
+// Se deixar a lista vazia [], o app mostrará apenas as opções de Criar/Entrar
 const meusGrupos = [
   {
     id: "1",
@@ -25,61 +27,47 @@ const meusGrupos = [
 ];
 
 export default function GruposScreen() {
+  // Navega para a tela de descrição/detalhes do grupo (usando o [id].tsx)
   const handleVerDescricao = (id: string) => {
-    router.push({
-      pathname: "/grupos/[id]",
-      params: { id },
-    });
+    router.push({ pathname: "/grupos/[id]", params: { id } });
   };
 
-  const irParaCriarGrupo = () => {
-    router.push("/grupos/criar");
-  };
-
-  const irParaEntrarGrupo = () => {
-    router.push("/grupos/entrar");
-  };
+  // Funções de navegação para as novas telas
+  const irParaCriarGrupo = () => router.push("/grupos/criar");
+  const irParaEntrarGrupo = () => router.push("/grupos/entrar");
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Grupos</Text>
+      <Text style={styles.subtitle}>Crie um novo ou entre em um existente</Text>
 
-      <Text style={styles.subtitle}>
-        Crie um novo ou entre em um existente
-      </Text>
-
+      {/* Botões de Ação Principal: Criar e Entrar */}
       <View style={styles.actionContainer}>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={irParaCriarGrupo}
         >
-          <Text style={styles.actionButtonText}>
-            + Criar Grupo
-          </Text>
+          <Text style={styles.actionButtonText}>+ Criar Grupo</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.secondaryButton,
-          ]}
+          style={[styles.actionButton, styles.secondaryButton]}
           onPress={irParaEntrarGrupo}
         >
-          <Text style={styles.actionButtonText}>
-            Entrar em Grupo
-          </Text>
+          <Text style={styles.actionButtonText}>Entrar em Grupo</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>
+      <Text
+        style={[styles.subtitle, { alignSelf: "flex-start", marginBottom: 15 }]}
+      >
         Seus grupos atuais:
       </Text>
 
       <FlatList
         data={meusGrupos}
         keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingBottom: 30 }}
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             Você ainda não faz parte de nenhum grupo.
@@ -92,23 +80,11 @@ export default function GruposScreen() {
             onPress={() => handleVerDescricao(item.id)}
           >
             <View style={styles.groupInfo}>
-              <Text style={styles.groupName}>
-                {item.nome}
-              </Text>
-
-              <Text style={styles.groupMembers}>
-                {item.membros} membros
-              </Text>
-
-              <Text style={styles.groupDescription}>
-                {item.descricao}
-              </Text>
+              <Text style={styles.groupName}>{item.nome}</Text>
+              <Text style={styles.groupMembers}>{item.membros} membros</Text>
             </View>
-
             <View style={styles.rankBadge}>
-              <Text style={styles.rankBadgeText}>
-                Ver
-              </Text>
+              <Text style={styles.rankBadgeText}>Ver</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -122,60 +98,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
     paddingHorizontal: 20,
+    paddingTop: 20,
   },
-
   title: {
     color: "#fff",
     fontSize: 32,
     fontWeight: "bold",
     alignSelf: "center",
-    marginTop: 10,
     marginBottom: 5,
   },
-
   subtitle: {
     color: "#888",
     fontSize: 14,
     alignSelf: "center",
     marginBottom: 30,
   },
-
   actionContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 30,
   },
-
   actionButton: {
     backgroundColor: "#111",
-    paddingVertical: 15,
+    padding: 15,
     borderRadius: 14,
     width: "48%",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#333",
   },
-
   secondaryButton: {
-    borderColor: "#007AFF",
+    borderColor: "#007AFF", // Um destaque azul para diferenciar "Entrar"
   },
-
   actionButtonText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 14,
   },
-
-  sectionTitle: {
-    color: "#888",
-    fontSize: 14,
-    marginBottom: 15,
-  },
-
-  listContent: {
-    paddingBottom: 30,
-  },
-
   groupCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -187,43 +146,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#222",
   },
-
   groupInfo: {
     flex: 1,
-    marginRight: 10,
   },
-
   groupName: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 4,
   },
-
   groupMembers: {
     color: "#666",
     fontSize: 14,
   },
-
-  groupDescription: {
-    color: "#555",
-    fontSize: 12,
-    marginTop: 4,
-  },
-
   rankBadge: {
     backgroundColor: "#333",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
   },
-
   rankBadgeText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 14,
   },
-
   emptyText: {
     color: "#444",
     textAlign: "center",
