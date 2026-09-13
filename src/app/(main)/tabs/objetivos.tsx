@@ -214,7 +214,9 @@ export default function ObjetivosScreen() {
                   <Ionicons name="warning" size={20} color="#ff8888" style={{ marginTop: 2 }} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.disputeTitle}>REVISÃO DO GRUPO</Text>
-                    <Text style={styles.disputeReason}>{val.disputedBy} contestou: "{val.disputeReason}"</Text>
+                    <Text style={styles.disputeReason}>
+                        {val.disputedBy} contestou: &quot;{val.disputeReason}&quot;
+                    </Text>
                   </View>
                 </View>
               )}

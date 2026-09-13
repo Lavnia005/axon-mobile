@@ -53,7 +53,7 @@ export default function DetalhesGrupoScreen() {
             onPress={() =>
               // Agora o 'id' aqui embaixo será aceito sem erro vermelho
               router.push({
-                pathname: "/tabs/ranking/[id]",
+                pathname: "/ranking/[id]",
                 params: { id: String(id) },
               })
             }
