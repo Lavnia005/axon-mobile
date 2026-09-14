@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 
+import { ApiError } from "@/services/api";
 import { authService } from "@/services/authService";
 import { authStorage } from "@/services/authStorage";
 import { LoginData, RegisterData, User } from "@/types/auth";
@@ -41,14 +42,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(response.user);
   }
 
-  async function register(data: RegisterData) {
-    const response = await authService.register(data);
-
-    await authStorage.saveToken(response.token);
-
-    setToken(response.token);
-    setUser(response.user);
-  }
+ async function register(data: RegisterData) {
+  await authService.register(data);
+}
 
   async function logout() {
     await authStorage.removeToken();
@@ -58,29 +54,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
-    async function restoreSession() {
-      try {
-        const storedToken = await authStorage.getToken();
+      async function restoreSession() {
+        try {
+          const storedToken = await authStorage.getToken();
 
-        if (!storedToken) {
-          return;
+          if (!storedToken) {
+            return;
+          }
+
+          const profile = await authService.getProfile(storedToken);
+
+          setToken(storedToken);
+          setUser(profile);
+        } catch (error) {
+          const shouldLogout =
+            error instanceof ApiError &&
+            (error.status === 401 || error.status === 404);
+
+          if (shouldLogout) {
+            await authStorage.removeToken();
+
+            setToken(null);
+            setUser(null);
+          }
+        } finally {
+          setIsLoading(false);
         }
-
-        const profile = await authService.getProfile(storedToken);
-
-        setToken(storedToken);
-        setUser(profile);
-      } catch {
-        await authStorage.removeToken();
-
-        setToken(null);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
       }
-    }
-
-    restoreSession();
   }, []);
 
   return (
