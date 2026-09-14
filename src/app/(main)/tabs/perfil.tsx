@@ -3,10 +3,15 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function PerfilScreen() {
   const router = useRouter();
+  const { logout } = useAuth();
 
+  async function handleLogout() {
+    await logout();
+  }
   // Dados fictícios para visualização
   const user = {
     nome: "Rafael Moreira",
@@ -55,7 +60,10 @@ export default function PerfilScreen() {
         </View>
 
         {/* LOGOUT / CONFIGURAÇÕES ADICIONAIS */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
           <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
 

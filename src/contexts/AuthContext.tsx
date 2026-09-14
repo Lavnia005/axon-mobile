@@ -54,35 +54,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
-      async function restoreSession() {
-        try {
-          const storedToken = await authStorage.getToken();
+    async function restoreSession() {
+      try {
+        const storedToken = await authStorage.getToken();
 
-          if (!storedToken) {
-            return;
-          }
-
-          const profile = await authService.getProfile(storedToken);
-
-          setToken(storedToken);
-          setUser(profile);
-        } catch (error) {
-          const shouldLogout =
-            error instanceof ApiError &&
-            (error.status === 401 || error.status === 404);
-
-          if (shouldLogout) {
-            await authStorage.removeToken();
-
-            setToken(null);
-            setUser(null);
-          }
-        } finally {
-          setIsLoading(false);
+        if (!storedToken) {
+          return;
         }
-      }
-  }, []);
 
+        const profile = await authService.getProfile(storedToken);
+
+        setToken(storedToken);
+        setUser(profile);
+      } catch (error) {
+        const shouldLogout =
+          error instanceof ApiError &&
+          (error.status === 401 || error.status === 404);
+
+        if (shouldLogout) {
+          await authStorage.removeToken();
+
+          setToken(null);
+          setUser(null);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    restoreSession();
+  }, []);
+  
   return (
     <AuthContext.Provider
       value={{
