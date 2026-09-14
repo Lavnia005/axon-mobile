@@ -1,33 +1,86 @@
-import { StyleSheet, Text, TextInput, TextInputProps, View } from "react-native";
+import { ReactNode } from "react";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+} from "react-native";
 
 import { colors, spacing, typography } from "@/theme";
 
 type AppInputProps = TextInputProps & {
   label?: string;
   error?: string;
+  variant?: "light" | "dark";
+  rightElement?: ReactNode;
 };
 
 export default function AppInput({
   label,
   error,
+  variant = "light",
+  rightElement,
   style,
   ...props
 }: AppInputProps) {
+  const theme = colors[variant];
+
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && (
+        <Text
+          style={[
+            styles.label,
+            {
+              color: theme.textPrimary,
+            },
+          ]}
+        >
+          {label}
+        </Text>
+      )}
 
-      <TextInput
-        {...props}
-        placeholderTextColor={colors.light.textSecondary}
+      <View
         style={[
-          styles.input,
-          error && styles.inputError,
-          style,
+          styles.inputWrapper,
+          {
+            backgroundColor: theme.surface,
+            borderColor: error ? theme.error : theme.border,
+          },
         ]}
-      />
+      >
+        <TextInput
+          {...props}
+          placeholderTextColor={theme.textSecondary}
+          style={[
+            styles.input,
+            {
+              color: theme.textPrimary,
+            },
+            style,
+          ]}
+        />
 
-      {error && <Text style={styles.error}>{error}</Text>}
+        {rightElement ? (
+          <View style={styles.rightElement}>
+            {rightElement}
+          </View>
+        ) : null}
+      </View>
+
+      {error ? (
+        <Text
+          style={[
+            styles.error,
+            {
+              color: theme.error,
+            },
+          ]}
+        >
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -41,29 +94,34 @@ const styles = StyleSheet.create({
   label: {
     ...typography.bodySmall,
     fontWeight: "600",
-    color: colors.light.textPrimary,
+  },
+
+  inputWrapper: {
+    minHeight: 52,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+
+    borderWidth: 1,
+    borderRadius: 14,
   },
 
   input: {
-    minHeight: 50,
+    flex: 1,
+    minHeight: 52,
     paddingHorizontal: spacing.lg,
-
-    backgroundColor: colors.light.surface,
-    color: colors.light.textPrimary,
-
-    borderWidth: 1,
-    borderColor: colors.light.border,
-    borderRadius: 12,
+    paddingVertical: spacing.sm,
 
     ...typography.body,
   },
 
-  inputError: {
-    borderColor: colors.light.error,
+  rightElement: {
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   error: {
     ...typography.caption,
-    color: colors.light.error,
   },
 });
