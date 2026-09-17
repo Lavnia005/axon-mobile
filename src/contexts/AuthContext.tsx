@@ -62,10 +62,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
 
-        const profile = await authService.getProfile(storedToken);
+       const response = await authService.getProfile(storedToken);
 
         setToken(storedToken);
-        setUser(profile);
+        setUser(response.user);
+      
       } catch (error) {
         const shouldLogout =
           error instanceof ApiError &&

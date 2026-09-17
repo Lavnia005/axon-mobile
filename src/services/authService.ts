@@ -2,8 +2,8 @@ import { apiRequest } from "@/services/api";
 import {
   AuthResponse,
   LoginData,
+  ProfileResponse,
   RegisterData,
-  User,
 } from "@/types/auth";
 
 export const authService = {
@@ -22,7 +22,7 @@ export const authService = {
   },
 
   getProfile(token: string) {
-    return apiRequest<User>("/users/me", {
+    return apiRequest<ProfileResponse>("/users/me", {
       method: "GET",
       token,
     });
