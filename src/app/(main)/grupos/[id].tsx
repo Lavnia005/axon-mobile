@@ -158,21 +158,43 @@ export default function DetalhesGrupoScreen() {
   }
 
   function irParaRanking() {
-    if (!group) {
-      return;
-    }
-
-    router.push({
-      pathname: "/ranking/[id]",
-      params: {
-        id: group._id,
-      },
-    });
+  if (!id) {
+    return;
   }
+
+  router.push({
+    pathname: "/ranking/[id]",
+    params: {
+      id,
+    },
+  });
+}
 
   function irParaObjetivos() {
-    router.push("/tabs/objetivos");
+  if (!id) {
+    return;
   }
+
+  router.push({
+    pathname: "/(main)/tabs/objetivos",
+    params: {
+      groupId: id,
+    },
+  });
+}
+
+  function irParaCriarObjetivo() {
+  if (!id) {
+    return;
+  }
+
+  router.push({
+    pathname: "/(main)/grupos/[id]/criar-objetivo",
+    params: {
+      id,
+    },
+  });
+}
 
   function irParaMembros() {
     if (!id) {
@@ -798,6 +820,42 @@ export default function DetalhesGrupoScreen() {
               }
             />
           </TouchableOpacity>
+                    {isAdmin && (
+            <TouchableOpacity
+              style={[
+                styles.navigationRow,
+                styles.createObjectiveRow,
+              ]}
+              onPress={irParaCriarObjetivo}
+              activeOpacity={0.75}
+            >
+              <View style={styles.navigationLeft}>
+                <View style={styles.createObjectiveIcon}>
+                  <Ionicons
+                    name="add"
+                    size={22}
+                    color="#D8CFFF"
+                  />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.createObjectiveTitle}>
+                    Criar objetivo
+                  </Text>
+
+                  <Text style={styles.navigationSubtitle}>
+                    Adicione uma nova missão ao grupo
+                  </Text>
+                </View>
+              </View>
+
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color="#9F8FFF"
+              />
+            </TouchableOpacity>
+          )}
         </View>
 
         <Text
@@ -1658,6 +1716,31 @@ deleteConfirmButton: {
 deleteConfirmText: {
   color: "#FFFFFF",
   fontSize: 13,
+  fontWeight: "700",
+},
+
+createObjectiveRow: {
+  backgroundColor: "#21183B",
+  borderColor: "rgba(122, 90, 248, 0.32)",
+},
+
+createObjectiveIcon: {
+  width: 40,
+  height: 40,
+  borderRadius: 13,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor: "#39236C",
+
+  borderWidth: 1,
+  borderColor: "rgba(139, 108, 255, 0.35)",
+},
+
+createObjectiveTitle: {
+  color: "#D8CFFF",
+  fontSize: 14,
   fontWeight: "700",
 },
 
