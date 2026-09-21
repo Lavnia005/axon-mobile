@@ -241,6 +241,7 @@ export default function ObjetivosScreen() {
     setTasks,
   ] = useState<Task[]>([]);
 
+
   const [
     selectedTask,
     setSelectedTask,
@@ -366,11 +367,12 @@ export default function ObjetivosScreen() {
       [token],
     );
 
-  useFocusEffect(
-    useCallback(() => {
-      carregarTarefas();
-    }, [carregarTarefas]),
-  );
+  
+ useFocusEffect(
+  useCallback(() => {
+    carregarTarefas();
+  }, [carregarTarefas]),
+);
 
   const taskFilters =
     useMemo(() => {
@@ -1563,8 +1565,76 @@ function confirmarExclusao(
                   </TouchableOpacity>
                 ),
               )
+
             )}
+          <TouchableOpacity
+  activeOpacity={0.85}
+  style={
+    styles.historyLink
+  }
+    onPress={() => {
+    if (
+      selectedFilter !== "todos"
+    ) {
+      router.push({
+        pathname:
+          "/(main)/objetivos/historico",
+        params: {
+          groupId:
+            selectedFilter,
+        },
+      });
+
+      return;
+    }
+
+  router.push(
+    "/(main)/objetivos/historico",
+  );
+}}
+>
+  <View
+    style={
+      styles.historyLinkIcon
+    }
+  >
+    <Ionicons
+      name="time-outline"
+      size={18}
+      color={UI.purpleSoft}
+    />
+  </View>
+
+  <View
+    style={{ flex: 1 }}
+  >
+    <Text
+      style={
+        styles.historyLinkTitle
+      }
+    >
+      Ver histórico
+    </Text>
+
+    <Text
+      style={
+        styles.historyLinkSubtitle
+      }
+    >
+      Consulte objetivos já encerrados
+    </Text>
+  </View>
+
+  <Ionicons
+    name="chevron-forward"
+    size={17}
+    color={
+      theme.textSecondary
+    }
+  />
+</TouchableOpacity>
           </>
+          
         ) : (
           <>
             {filteredValidations.length ===
@@ -3782,6 +3852,54 @@ const styles =
         "#20283A",
     },
 
+    historyLink: {
+  marginHorizontal: 20,
+  marginTop: 10,
+  marginBottom: 8,
+
+  paddingTop: 16,
+  paddingBottom: 10,
+
+  flexDirection: "row",
+  alignItems: "center",
+
+  gap: 12,
+
+  borderTopWidth: 1,
+
+  borderTopColor:
+    "rgba(170,178,192,0.12)",
+},
+
+historyLinkIcon: {
+  width: 36,
+  height: 36,
+
+  borderRadius: 11,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "rgba(139,108,255,0.10)",
+},
+
+historyLinkTitle: {
+  color: "#C9BEFF",
+
+  fontSize: 12,
+
+  fontWeight: "800",
+},
+
+historyLinkSubtitle: {
+  color:
+    theme.textSecondary,
+
+  fontSize: 9,
+
+  marginTop: 2,
+},
     /*
      * STATES
      */
