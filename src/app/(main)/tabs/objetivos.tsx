@@ -627,6 +627,18 @@ export default function ObjetivosScreen() {
             initials || "U",
           photoUrl:
             submission.evidence.url,
+          isDisputed:
+            submission.status === "voting",
+
+          disputeReason:
+            submission.contest?.reason,
+
+          disputedBy:
+            typeof submission.contest
+              ?.createdBy === "string"
+              ? "Usuário"
+              : submission.contest
+                  ?.createdBy?.name,
         };
       },
     );
@@ -1013,13 +1025,59 @@ async function aprovarValidacao(
   }
 }
 
-  function closeContestModal() {
-    setValidationToContest(
-      null,
+  async function votarValidacao(
+  validation: Validation,
+  decision:
+    | "accepted"
+    | "invalidated",
+) {
+  if (
+    !token ||
+    typeof validation.id !==
+      "string" ||
+    validatingSubmissionId
+  ) {
+    return;
+  }
+
+  try {
+    setValidatingSubmissionId(
+      validation.id,
     );
 
-    setContestReason("");
+    await submissionService.voteSubmission(
+      validation.id,
+      {
+        decision,
+      },
+      token,
+    );
+
+    setPendingSubmissions(
+      (currentSubmissions) =>
+        currentSubmissions.filter(
+          (submission) =>
+            submission._id !==
+            validation.id,
+        ),
+    );
+  } catch (error) {
+    console.error(
+      "Erro ao votar na evidência:",
+      error,
+    );
+  } finally {
+    setValidatingSubmissionId(
+      null,
+    );
   }
+}
+
+function closeContestModal() {
+  setValidationToContest(null);
+  setContestReason("");
+}
+
 
   async function handleContest() {
   if (
@@ -2354,6 +2412,12 @@ async function aprovarValidacao(
                             style={
                               styles.invalidateButton
                             }
+                            onPress={() => {
+                              void votarValidacao(
+                                validation,
+                                "invalidated",
+                              );
+                            }}
                           >
                             <Ionicons
                               name="close-circle-outline"
@@ -2379,6 +2443,12 @@ async function aprovarValidacao(
                             style={
                               styles.keepValidButton
                             }
+                            onPress={() => {
+                              void votarValidacao(
+                                validation,
+                                "accepted",
+                              );
+                            }}
                           >
                             <Ionicons
                               name="checkmark-circle-outline"
