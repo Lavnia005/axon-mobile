@@ -62,10 +62,11 @@ type ViewMode =
   | "validation";
 
 interface Validation {
-  id: number;
+  id: string | number;
   userName: string;
   taskTitle: string;
   group: string;
+  groupId?: string | null;
   time: string;
   userAvatar: string;
   photoUrl: string;
@@ -75,42 +76,6 @@ interface Validation {
   disputedBy?: string;
 }
 
-/*
- * TEMPORÁRIO
- *
- * Será substituído pelos dados reais
- * de Task Submissions.
- */
-const pendingValidations: Validation[] = [
-  {
-    id: 1,
-    userName: "João Victor",
-    taskTitle:
-      "Sem redes sociais pela manhã",
-    group: "Inateleiros",
-    time: "Há 10 min",
-    userAvatar: "JV",
-    photoUrl:
-      "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    userName: "Mateus",
-    taskTitle: "Treinar 1 hora",
-    group: "Marombeiros",
-    time: "Há 45 min",
-    userAvatar: "MT",
-    photoUrl:
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop",
-
-    isDisputed: true,
-
-    disputeReason:
-      "A foto está escura e não dá para confirmar se o objetivo foi realmente cumprido.",
-
-    disputedBy: "Diogo",
-  },
-];
 
 function getTaskGroupId(
   group: Task["group"],
@@ -143,6 +108,47 @@ function getSubmissionTaskId(
 
   return task._id;
 }
+
+function getSubmissionGroupId(
+  submission: TaskSubmission,
+) {
+  if (
+    typeof submission.task ===
+    "string"
+  ) {
+    return null;
+  }
+
+  const group =
+    submission.task.group;
+
+  if (typeof group === "string") {
+    return group;
+  }
+
+  return group._id;
+}
+
+function getSubmissionGroupName(
+  submission: TaskSubmission,
+) {
+  if (
+    typeof submission.task ===
+    "string"
+  ) {
+    return "Grupo";
+  }
+
+  const group =
+    submission.task.group;
+
+  if (typeof group === "string") {
+    return "Grupo";
+  }
+
+  return group.name;
+}
+
 
 function formatDateTime(
   value: string,
@@ -265,6 +271,14 @@ export default function ObjetivosScreen() {
     );
 
   const [
+    pendingSubmissions,
+    setPendingSubmissions,
+  ] =
+    useState<TaskSubmission[]>(
+      [],
+    );
+
+  const [
     selectedTask,
     setSelectedTask,
   ] =
@@ -339,6 +353,13 @@ export default function ObjetivosScreen() {
     showHelp,
     setShowHelp,
   ] = useState(false);
+
+  const [
+    validatingSubmissionId,
+    setValidatingSubmissionId,
+  ] = useState<string | null>(
+    null,
+  );
 
   const [
     validationToContest,
@@ -449,14 +470,45 @@ export default function ObjetivosScreen() {
     [token],
   );
 
+  const carregarValidacoesPendentes =
+  useCallback(
+    async () => {
+      if (!token) {
+        setPendingSubmissions([]);
+        return;
+      }
+
+      try {
+        const response =
+          await submissionService.getPendingValidations(
+            token,
+          );
+
+        setPendingSubmissions(
+          response.submissions,
+        );
+      } catch (error) {
+        console.error(
+          "Erro ao carregar validações pendentes:",
+          error,
+        );
+
+        setPendingSubmissions([]);
+      }
+    },
+    [token],
+  );
+
   
  useFocusEffect(
   useCallback(() => {
     carregarTarefas();
     carregarMinhasEvidencias();
+    carregarValidacoesPendentes();
   }, [
     carregarTarefas,
     carregarMinhasEvidencias,
+    carregarValidacoesPendentes,
   ]),
 );
 
@@ -531,34 +583,99 @@ export default function ObjetivosScreen() {
   ]),
 );
 
-  const validationFilters =
-    useMemo(() => {
-      const groups =
-        Array.from(
-          new Set(
-            pendingValidations.map(
-              (
-                validation,
-              ) =>
-                validation.group,
+  const realPendingValidations =
+  useMemo<Validation[]>(() => {
+    return pendingSubmissions.map(
+      (submission) => {
+        const userName =
+          typeof submission.user ===
+          "string"
+            ? "Usuário"
+            : submission.user.name;
+
+        const taskTitle =
+          typeof submission.task ===
+          "string"
+            ? "Objetivo"
+            : submission.task.title;
+
+        const initials = userName
+          .split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((name) =>
+            name.charAt(0).toUpperCase(),
+          )
+          .join("");
+
+        return {
+          id: submission._id,
+          userName,
+          taskTitle,
+          group:
+            getSubmissionGroupName(
+              submission,
             ),
+           groupId:
+            getSubmissionGroupId(
+              submission,
+            ),
+          time: formatDateTime(
+            submission.createdAt,
+          ),
+          userAvatar:
+            initials || "U",
+          photoUrl:
+            submission.evidence.url,
+        };
+      },
+    );
+  }, [pendingSubmissions]);
+
+  const validationFilters =
+  useMemo(() => {
+    const groups =
+      new Map<string, string>();
+
+    pendingSubmissions.forEach(
+      (submission) => {
+        const groupId =
+          getSubmissionGroupId(
+            submission,
+          );
+
+        if (!groupId) {
+          return;
+        }
+
+        groups.set(
+          groupId,
+          getSubmissionGroupName(
+            submission,
           ),
         );
+      },
+    );
 
-      return [
-        {
-          label: "Todos",
-          value: "todos",
-        },
+    return [
+      {
+        label: "Todos",
+        value: "todos",
+      },
 
-        ...groups.map(
-          (group) => ({
-            value: group,
-            label: group,
-          }),
-        ),
-      ];
-    }, []);
+      ...Array.from(
+        groups.entries(),
+      ).map(
+        ([
+          value,
+          label,
+        ]) => ({
+          value,
+          label,
+        }),
+      ),
+    ];
+  }, [pendingSubmissions]);
 
   const availableFilters =
     viewMode === "tasks"
@@ -596,20 +713,23 @@ export default function ObjetivosScreen() {
     ]);
 
   const filteredValidations =
-    useMemo(() => {
-      if (
-        selectedFilter ===
-        "todos"
-      ) {
-        return pendingValidations;
-      }
+  useMemo(() => {
+    if (
+      selectedFilter ===
+      "todos"
+    ) {
+      return realPendingValidations;
+    }
 
-      return pendingValidations.filter(
-        (validation) =>
-          validation.group ===
-          selectedFilter,
-      );
-    }, [selectedFilter]);
+    return realPendingValidations.filter(
+      (validation) =>
+        validation.groupId ===
+        selectedFilter,
+    );
+  }, [
+    realPendingValidations,
+    selectedFilter,
+  ]);
 
   const totalPoints =
     useMemo(() => {
@@ -849,6 +969,50 @@ function confirmarExclusao(
   setTaskToDelete(task);
 }
 
+async function aprovarValidacao(
+  validation: Validation,
+) {
+  if (
+    !token ||
+    typeof validation.id !== "string" ||
+    validatingSubmissionId
+  ) {
+    return;
+  }
+
+  try {
+    setValidatingSubmissionId(
+      validation.id,
+    );
+
+    await submissionService.validateSubmission(
+      validation.id,
+      {
+        action: "approved",
+      },
+      token,
+    );
+
+    setPendingSubmissions(
+      (currentSubmissions) =>
+        currentSubmissions.filter(
+          (submission) =>
+            submission._id !==
+            validation.id,
+        ),
+    );
+  } catch (error) {
+    console.error(
+      "Erro ao aprovar evidência:",
+      error,
+    );
+  } finally {
+    setValidatingSubmissionId(
+      null,
+    );
+  }
+}
+
   function closeContestModal() {
     setValidationToContest(
       null,
@@ -857,20 +1021,53 @@ function confirmarExclusao(
     setContestReason("");
   }
 
-  function handleContest() {
-    if (
-      !contestReason.trim()
-    ) {
-      return;
-    }
+  async function handleContest() {
+  if (
+    !token ||
+    !validationToContest ||
+    typeof validationToContest.id !==
+      "string" ||
+    !contestReason.trim() ||
+    validatingSubmissionId
+  ) {
+    return;
+  }
 
-    console.log(
-      "Motivo da contestação:",
-      contestReason,
+  try {
+    setValidatingSubmissionId(
+      validationToContest.id,
+    );
+
+    await submissionService.validateSubmission(
+      validationToContest.id,
+      {
+        action: "contested",
+        reason: contestReason.trim(),
+      },
+      token,
+    );
+
+    setPendingSubmissions(
+      (currentSubmissions) =>
+        currentSubmissions.filter(
+          (submission) =>
+            submission._id !==
+            validationToContest.id,
+        ),
     );
 
     closeContestModal();
+  } catch (error) {
+    console.error(
+      "Erro ao contestar evidência:",
+      error,
+    );
+  } finally {
+    setValidatingSubmissionId(
+      null,
+    );
   }
+}
 
   return (
     <SafeAreaView
@@ -1049,7 +1246,7 @@ function confirmarExclusao(
               Validar
             </Text>
 
-            {pendingValidations.length >
+           {realPendingValidations.length >
               0 && (
               <View
                 style={
@@ -1062,7 +1259,7 @@ function confirmarExclusao(
                   }
                 >
                   {
-                    pendingValidations.length
+                    realPendingValidations.length
                   }
                 </Text>
               </View>
@@ -2353,6 +2550,11 @@ function confirmarExclusao(
                           style={
                             styles.approveButton
                           }
+                          onPress={() => {
+                            void aprovarValidacao(
+                              validation,
+                            );
+                          }}
                         >
                           <Ionicons
                             name="checkmark"
