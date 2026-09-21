@@ -22,6 +22,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
 import {
   router,
   useFocusEffect,
@@ -32,8 +33,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/services/api";
 import { taskService } from "@/services/taskService";
+import { submissionService } from "@/services/submissionService";
 import { colors } from "@/theme";
 import { Task } from "@/types/task";
+import { TaskSubmission } from "@/types/submission";
 
 const theme = colors.dark;
 
@@ -127,6 +130,18 @@ function getTaskGroupName(
   }
 
   return group.name;
+}
+
+function getSubmissionTaskId(
+  task:
+    | string
+    | TaskSubmission["task"],
+) {
+  if (typeof task === "string") {
+    return task;
+  }
+
+  return task._id;
 }
 
 function formatDateTime(
@@ -241,6 +256,13 @@ export default function ObjetivosScreen() {
     setTasks,
   ] = useState<Task[]>([]);
 
+  const [
+    mySubmissions,
+    setMySubmissions,
+  ] =
+    useState<TaskSubmission[]>(
+      [],
+    );
 
   const [
     selectedTask,
@@ -249,13 +271,44 @@ export default function ObjetivosScreen() {
     useState<Task | null>(
       null,
     );
+
   const [
-  taskToDelete,
-  setTaskToDelete,
-] =
-  useState<Task | null>(
-    null,
-  );
+    evidenceTask,
+    setEvidenceTask,
+  ] =
+    useState<Task | null>(
+      null,
+    );
+  const [
+    evidenceImage,
+    setEvidenceImage,
+  ] =
+    useState<ImagePicker.ImagePickerAsset | null>(
+      null,
+    );
+
+  const [
+    isSubmittingEvidence,
+    setIsSubmittingEvidence,
+  ] = useState(false);
+
+  const [
+    evidenceError,
+    setEvidenceError,
+  ] = useState("");
+
+  const [
+    showEvidenceSuccess,
+    setShowEvidenceSuccess,
+  ] = useState(false);
+
+  const [
+    taskToDelete,
+    setTaskToDelete,
+  ] =
+    useState<Task | null>(
+      null,
+    );
 
   const [
     isDeletingTask,
@@ -367,11 +420,44 @@ export default function ObjetivosScreen() {
       [token],
     );
 
+    const carregarMinhasEvidencias =
+  useCallback(
+    async () => {
+      if (!token) {
+        setMySubmissions([]);
+        return;
+      }
+
+      try {
+        const response =
+          await submissionService.getMySubmissions(
+            token,
+          );
+
+        setMySubmissions(
+          response.submissions,
+        );
+      } catch (error) {
+        console.error(
+          "Erro ao carregar minhas evidências:",
+          error,
+        );
+
+        setMySubmissions([]);
+      }
+    },
+    [token],
+  );
+
   
  useFocusEffect(
   useCallback(() => {
     carregarTarefas();
-  }, [carregarTarefas]),
+    carregarMinhasEvidencias();
+  }, [
+    carregarTarefas,
+    carregarMinhasEvidencias,
+  ]),
 );
 
   const taskFilters =
@@ -548,6 +634,82 @@ export default function ObjetivosScreen() {
       filteredValidations,
     ]);
 
+  function getSubmissionForTask(
+  task: Task,
+) {
+  return mySubmissions.find(
+    (submission) =>
+      getSubmissionTaskId(
+        submission.task,
+      ) === task._id,
+  );
+}
+
+  async function enviarEvidencia() {
+  if (
+    !token ||
+    !evidenceTask ||
+    !evidenceImage ||
+    isSubmittingEvidence
+  ) {
+    return;
+  }
+
+  try {
+    setIsSubmittingEvidence(true);
+    setEvidenceError("");
+
+    const response =
+      await submissionService.submitEvidence(
+        evidenceTask._id,
+        {
+          uri: evidenceImage.uri,
+
+          name:
+            evidenceImage.fileName ??
+            `evidence-${Date.now()}.jpg`,
+
+          type:
+            evidenceImage.mimeType ??
+            "image/jpeg",
+        },
+        token,
+      );
+
+    setMySubmissions(
+      (currentSubmissions) => [
+        response.submission,
+
+        ...currentSubmissions.filter(
+          (submission) =>
+            getSubmissionTaskId(
+              submission.task,
+            ) !== evidenceTask._id,
+        ),
+      ],
+    );
+
+    setEvidenceTask(null);
+    setEvidenceImage(null);
+
+    setShowEvidenceSuccess(true);
+  } catch (error) {
+    console.error(
+      "Erro ao enviar evidência:",
+      error,
+    );
+
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : "Não foi possível enviar a evidência.";
+
+    setEvidenceError(message);
+  } finally {
+    setIsSubmittingEvidence(false);
+  }
+}
+
   function changeView(
     mode: ViewMode,
   ) {
@@ -555,6 +717,66 @@ export default function ObjetivosScreen() {
 
     setSelectedFilter(
       "todos",
+    );
+  }
+
+  async function escolherFotoDaGaleria() {
+    const permission =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      return;
+    }
+
+    const result =
+      await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: [
+          "images",
+        ],
+
+        allowsEditing: true,
+
+        aspect: [4, 3],
+
+        quality: 0.85,
+      });
+
+    if (result.canceled) {
+      return;
+    }
+
+    setEvidenceImage(
+      result.assets[0],
+    );
+  }
+
+  async function tirarFoto() {
+    const permission =
+      await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      return;
+    }
+
+    const result =
+      await ImagePicker.launchCameraAsync({
+        mediaTypes: [
+          "images",
+        ],
+
+        allowsEditing: true,
+
+        aspect: [4, 3],
+
+        quality: 0.85,
+      });
+
+    if (result.canceled) {
+      return;
+    }
+
+    setEvidenceImage(
+      result.assets[0],
     );
   }
 
@@ -2694,38 +2916,94 @@ function confirmarExclusao(
                     objetivo.
                   </Text>
 
-                  <TouchableOpacity
-                    disabled
-                    style={
-                      styles.uploadButtonDisabled
-                    }
-                  >
-                    <Ionicons
-                      name="camera-outline"
-                      size={18}
-                      color={
-                        theme.textSecondary
-                      }
-                    />
-
-                    <Text
+                  {getSubmissionForTask(
+                    selectedTask,
+                  ) ? (
+                    <View
                       style={
-                        styles.uploadButtonDisabledText
+                        styles.submissionSentCard
                       }
                     >
-                      Selecionar foto
-                    </Text>
-                  </TouchableOpacity>
+                      <View
+                        style={
+                          styles.submissionSentIcon
+                        }
+                      >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={22}
+                          color={
+                            theme.success
+                          }
+                        />
+                      </View>
 
-                  <Text
-                    style={
-                      styles.integrationNotice
-                    }
-                  >
-                    Integração de
-                    evidências na próxima
-                    etapa
-                  </Text>
+                      <View
+                        style={{
+                          flex: 1,
+                        }}
+                      >
+                        <Text
+                          style={
+                            styles.submissionSentTitle
+                          }
+                        >
+                          Evidência enviada
+                        </Text>
+
+                        <Text
+                          style={
+                            styles.submissionSentDescription
+                          }
+                        >
+                          Você já enviou sua
+                          evidência para este
+                          objetivo.
+                        </Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        activeOpacity={0.85}
+                        style={
+                          styles.uploadButton
+                        }
+                        onPress={() => {
+                          setEvidenceImage(null);
+
+                          setEvidenceTask(
+                            selectedTask,
+                          );
+
+                          setSelectedTask(null);
+                        }}
+                      >
+                        <Ionicons
+                          name="camera-outline"
+                          size={18}
+                          color="#FFFFFF"
+                        />
+
+                        <Text
+                          style={
+                            styles.uploadButtonText
+                          }
+                        >
+                          Enviar evidência
+                        </Text>
+                      </TouchableOpacity>
+
+                      <Text
+                        style={
+                          styles.integrationNotice
+                        }
+                      >
+                        Tire uma foto ou escolha uma
+                        imagem da galeria.
+                      </Text>
+                    </>
+                  )}
                 </View>
               </>
             )}
@@ -2948,6 +3226,516 @@ function confirmarExclusao(
           </View>
         </View>
       </Modal>
+
+      {/* ENVIO DE EVIDÊNCIA */}
+
+<Modal
+  visible={!!evidenceTask}
+  transparent
+  animationType="fade"
+  onRequestClose={() => {
+    setEvidenceTask(null);
+    setEvidenceImage(null);
+  }}
+>
+  <View
+    style={
+      styles.evidenceOverlay
+    }
+  >
+    <TouchableOpacity
+      activeOpacity={1}
+      style={
+        styles.evidenceOverlayBackground
+      }
+      onPress={() => {
+        setEvidenceTask(null);
+        setEvidenceImage(null);
+      }}
+    />
+
+    <View
+      style={
+        styles.evidenceModal
+      }
+    >
+      <View
+        style={
+          styles.evidenceModalHeader
+        }
+      >
+        <View
+          style={
+            styles.evidenceModalIcon
+          }
+        >
+          <Ionicons
+            name="camera-outline"
+            size={24}
+            color={
+              UI.purpleSoft
+            }
+          />
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={
+            styles.evidenceCloseButton
+          }
+          onPress={() => {
+            setEvidenceTask(null);
+            setEvidenceImage(null);
+          }}
+        >
+          <Ionicons
+            name="close"
+            size={20}
+            color={
+              theme.textSecondary
+            }
+          />
+        </TouchableOpacity>
+      </View>
+
+      <Text
+        style={
+          styles.evidenceModalTitle
+        }
+      >
+        Enviar evidência
+      </Text>
+
+      <Text
+        style={
+          styles.evidenceModalSubtitle
+        }
+      >
+        Registre uma foto agora ou
+        escolha uma imagem da sua
+        galeria.
+      </Text>
+
+      {evidenceTask && (
+        <View
+          style={
+            styles.evidenceTaskInfo
+          }
+        >
+          <Ionicons
+            name="flag-outline"
+            size={15}
+            color={
+              theme.primary
+            }
+          />
+
+          <Text
+            style={
+              styles.evidenceTaskTitle
+            }
+            numberOfLines={2}
+          >
+            {
+              evidenceTask.title
+            }
+          </Text>
+        </View>
+      )}
+
+    {evidenceImage ? (
+  <View
+    style={
+      styles.evidencePreviewArea
+    }
+  >
+    <Image
+      source={{
+        uri: evidenceImage.uri,
+      }}
+      style={
+        styles.evidencePreviewImage
+      }
+      resizeMode="cover"
+    />
+
+    <View
+      style={
+        styles.evidencePreviewBadge
+      }
+    >
+      <Ionicons
+        name="checkmark-circle"
+        size={14}
+        color={
+          theme.success
+        }
+      />
+
+      <Text
+        style={
+          styles.evidencePreviewBadgeText
+        }
+      >
+        Foto pronta para revisão
+      </Text>
+    </View>
+
+    <View
+      style={
+        styles.evidencePreviewActions
+      }
+    >
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={
+          styles.evidenceChangeButton
+        }
+        onPress={() => {
+          setEvidenceImage(null);
+        }}
+      >
+        <Ionicons
+          name="images-outline"
+          size={17}
+          color={
+            UI.purpleSoft
+          }
+        />
+
+        <Text
+          style={
+            styles.evidenceChangeButtonText
+          }
+        >
+          Trocar foto
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={
+          styles.evidenceRemoveButton
+        }
+        onPress={() => {
+          setEvidenceImage(null);
+        }}
+      >
+        <Ionicons
+          name="trash-outline"
+          size={17}
+          color={
+            theme.error
+          }
+        />
+
+        <Text
+          style={
+            styles.evidenceRemoveButtonText
+          }
+        >
+          Remover
+        </Text>
+      </TouchableOpacity>
+    </View>
+    {evidenceError ? (
+  <View
+    style={
+      styles.evidenceErrorBox
+    }
+  >
+    <Ionicons
+      name="alert-circle-outline"
+      size={15}
+      color={
+        theme.error
+      }
+    />
+
+    <Text
+      style={
+        styles.evidenceErrorText
+      }
+    >
+      {evidenceError}
+    </Text>
+  </View>
+) : null}
+
+<TouchableOpacity
+  activeOpacity={0.85}
+  disabled={
+    isSubmittingEvidence
+  }
+  style={[
+    styles.evidenceSubmitButton,
+
+    isSubmittingEvidence &&
+      styles.evidenceSubmitButtonDisabled,
+  ]}
+  onPress={() => {
+    void enviarEvidencia();
+  }}
+>
+  {isSubmittingEvidence ? (
+    <ActivityIndicator
+      size="small"
+      color="#FFFFFF"
+    />
+  ) : (
+    <>
+      <Ionicons
+        name="cloud-upload-outline"
+        size={18}
+        color="#FFFFFF"
+      />
+
+      <Text
+        style={
+          styles.evidenceSubmitButtonText
+        }
+      >
+        Enviar evidência
+      </Text>
+    </>
+  )}
+</TouchableOpacity>
+  </View>
+) : (
+  <View
+    style={
+      styles.evidenceOptions
+    }
+  >
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={
+        styles.evidenceOptionPrimary
+      }
+      onPress={() => {
+        void tirarFoto();
+      }}
+    >
+      <View
+        style={
+          styles.evidenceOptionIcon
+        }
+      >
+        <Ionicons
+          name="camera"
+          size={23}
+          color="#FFFFFF"
+        />
+      </View>
+
+      <View
+        style={{
+          flex: 1,
+        }}
+      >
+        <Text
+          style={
+            styles.evidenceOptionTitle
+          }
+        >
+          Tirar foto
+        </Text>
+
+        <Text
+          style={
+            styles.evidenceOptionDescription
+          }
+        >
+          Registre a evidência agora
+        </Text>
+      </View>
+
+      <Ionicons
+        name="chevron-forward"
+        size={17}
+        color="#B9C4FF"
+      />
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={
+        styles.evidenceOptionSecondary
+      }
+      onPress={() => {
+        void escolherFotoDaGaleria();
+      }}
+    >
+      <View
+        style={
+          styles.evidenceGalleryIcon
+        }
+      >
+        <Ionicons
+          name="images-outline"
+          size={22}
+          color={
+            UI.purpleSoft
+          }
+        />
+      </View>
+
+      <View
+        style={{
+          flex: 1,
+        }}
+      >
+        <Text
+          style={
+            styles.evidenceOptionTitle
+          }
+        >
+          Escolher da galeria
+        </Text>
+
+        <Text
+          style={
+            styles.evidenceOptionDescription
+          }
+        >
+          Use uma foto já existente
+        </Text>
+      </View>
+
+      <Ionicons
+        name="chevron-forward"
+        size={17}
+        color={
+          theme.textSecondary
+        }
+      />
+    </TouchableOpacity>
+  </View>
+)}
+
+      <View
+        style={
+          styles.evidenceInfo
+        }
+      >
+        <Ionicons
+          name="information-circle-outline"
+          size={15}
+          color={
+            theme.textSecondary
+          }
+        />
+
+        <Text
+          style={
+            styles.evidenceInfoText
+          }
+        >
+          Você poderá revisar a foto
+          antes de enviar.
+        </Text>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+{/* SUCESSO NO ENVIO DA EVIDÊNCIA */}
+
+<Modal
+  visible={showEvidenceSuccess}
+  transparent
+  animationType="fade"
+  onRequestClose={() =>
+    setShowEvidenceSuccess(false)
+  }
+>
+  <View
+    style={
+      styles.evidenceSuccessOverlay
+    }
+  >
+    <View
+      style={
+        styles.evidenceSuccessModal
+      }
+    >
+      <View
+        style={
+          styles.evidenceSuccessIcon
+        }
+      >
+        <Ionicons
+          name="checkmark-circle"
+          size={30}
+          color={
+            theme.success
+          }
+        />
+      </View>
+
+      <Text
+        style={
+          styles.evidenceSuccessTitle
+        }
+      >
+        Evidência enviada!
+      </Text>
+
+      <Text
+        style={
+          styles.evidenceSuccessDescription
+        }
+      >
+        Sua evidência foi registrada
+        com sucesso e já pode ser
+        analisada pelos membros do
+        grupo.
+      </Text>
+
+      <View
+        style={
+          styles.evidenceSuccessInfo
+        }
+      >
+        <Ionicons
+          name="shield-checkmark-outline"
+          size={15}
+          color={
+            UI.purpleSoft
+          }
+        />
+
+        <Text
+          style={
+            styles.evidenceSuccessInfoText
+          }
+        >
+          Você não poderá enviar outra
+          evidência para este objetivo.
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={
+          styles.evidenceSuccessButton
+        }
+        onPress={() =>
+          setShowEvidenceSuccess(false)
+        }
+      >
+        <Text
+          style={
+            styles.evidenceSuccessButtonText
+          }
+        >
+          Entendi
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
 
       {/* CONTESTAÇÃO */}
 
@@ -5127,35 +5915,32 @@ deleteTaskButtonText: {
       marginTop: 5,
     },
 
-    uploadButtonDisabled: {
-      width: "100%",
-      height: 44,
+    uploadButton: {
+  width: "100%",
+  height: 44,
 
-      marginTop: 16,
+  marginTop: 16,
 
-      borderRadius: 11,
+  borderRadius: 11,
 
-      backgroundColor:
-        "#20283A",
+  backgroundColor:
+    theme.secondary,
 
-      opacity: 0.65,
+  flexDirection: "row",
 
-      flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
 
-      alignItems: "center",
-      justifyContent: "center",
+  gap: 6,
+},
 
-      gap: 6,
-    },
+uploadButtonText: {
+  color: "#FFFFFF",
 
-    uploadButtonDisabledText: {
-      color:
-        theme.textSecondary,
+  fontSize: 11,
 
-      fontSize: 11,
-
-      fontWeight: "800",
-    },
+  fontWeight: "800",
+},
 
     integrationNotice: {
       color: "#59657A",
@@ -5164,6 +5949,63 @@ deleteTaskButtonText: {
 
       marginTop: 8,
     },
+
+    submissionSentCard: {
+  width: "100%",
+
+  marginTop: 16,
+
+  padding: 13,
+
+  borderRadius: 14,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 10,
+
+  backgroundColor:
+    "rgba(34,197,94,0.07)",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(34,197,94,0.18)",
+},
+
+submissionSentIcon: {
+  width: 38,
+  height: 38,
+
+  borderRadius: 12,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "rgba(34,197,94,0.10)",
+},
+
+submissionSentTitle: {
+  color:
+    theme.success,
+
+  fontSize: 11,
+
+  fontWeight: "800",
+},
+
+submissionSentDescription: {
+  color:
+    theme.textSecondary,
+
+  fontSize: 9,
+
+  lineHeight: 14,
+
+  marginTop: 2,
+},
 
     /*
  * MODAL DE EXCLUSÃO
@@ -5398,6 +6240,560 @@ deleteSuccessButtonText: {
   color: "#FFFFFF",
 
   fontSize: 12,
+
+  fontWeight: "900",
+},
+
+evidenceOverlay: {
+  flex: 1,
+
+  justifyContent: "center",
+
+  paddingHorizontal: 20,
+
+  backgroundColor:
+    "rgba(4,7,14,0.88)",
+},
+
+evidenceOverlayBackground: {
+  ...StyleSheet.absoluteFillObject,
+},
+
+evidenceModal: {
+  zIndex: 2,
+
+  padding: 20,
+
+  borderRadius: 22,
+
+  backgroundColor:
+    theme.surface,
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(139,108,255,0.22)",
+},
+
+evidenceModalHeader: {
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  justifyContent:
+    "space-between",
+
+  marginBottom: 14,
+},
+
+evidenceModalIcon: {
+  width: 48,
+  height: 48,
+
+  borderRadius: 15,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "rgba(139,108,255,0.12)",
+},
+
+evidenceCloseButton: {
+  width: 36,
+  height: 36,
+
+  borderRadius: 11,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "#1B2335",
+},
+
+evidenceModalTitle: {
+  color:
+    theme.textPrimary,
+
+  fontSize: 19,
+
+  fontWeight: "900",
+},
+
+evidenceModalSubtitle: {
+  color:
+    theme.textSecondary,
+
+  fontSize: 11,
+
+  lineHeight: 18,
+
+  marginTop: 6,
+},
+
+evidenceTaskInfo: {
+  minHeight: 48,
+
+  marginTop: 16,
+
+  paddingHorizontal: 13,
+
+  borderRadius: 13,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 8,
+
+  backgroundColor:
+    "#151C2B",
+
+  borderWidth: 1,
+
+  borderColor:
+    "#283249",
+},
+
+evidenceTaskTitle: {
+  flex: 1,
+
+  color:
+    theme.textPrimary,
+
+  fontSize: 11,
+
+  lineHeight: 16,
+
+  fontWeight: "700",
+},
+
+evidenceOptions: {
+  gap: 10,
+
+  marginTop: 16,
+},
+
+evidenceOptionPrimary: {
+  minHeight: 68,
+
+  paddingHorizontal: 13,
+
+  borderRadius: 15,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 11,
+
+  backgroundColor:
+    "#263763",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(82,114,242,0.28)",
+},
+
+evidenceOptionSecondary: {
+  minHeight: 68,
+
+  paddingHorizontal: 13,
+
+  borderRadius: 15,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 11,
+
+  backgroundColor:
+    "#1D1830",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(139,108,255,0.22)",
+},
+
+evidenceOptionIcon: {
+  width: 40,
+  height: 40,
+
+  borderRadius: 12,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    theme.primary,
+},
+
+evidenceGalleryIcon: {
+  width: 40,
+  height: 40,
+
+  borderRadius: 12,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "rgba(139,108,255,0.13)",
+},
+
+evidenceOptionTitle: {
+  color:
+    theme.textPrimary,
+
+  fontSize: 12,
+
+  fontWeight: "800",
+},
+
+evidenceOptionDescription: {
+  color:
+    theme.textSecondary,
+
+  fontSize: 9,
+
+  marginTop: 3,
+},
+
+evidenceInfo: {
+  marginTop: 15,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 6,
+},
+
+evidenceInfoText: {
+  flex: 1,
+
+  color:
+    theme.textSecondary,
+
+  fontSize: 9,
+
+  lineHeight: 14,
+},
+
+evidencePreviewArea: {
+  marginTop: 16,
+},
+
+evidencePreviewImage: {
+  width: "100%",
+  height: 220,
+
+  borderRadius: 16,
+
+  backgroundColor:
+    "#101722",
+},
+
+evidencePreviewBadge: {
+  alignSelf: "flex-start",
+
+  marginTop: 10,
+
+  paddingHorizontal: 9,
+  height: 28,
+
+  borderRadius: 9,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 5,
+
+  backgroundColor:
+    "rgba(34,197,94,0.08)",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(34,197,94,0.18)",
+},
+
+evidencePreviewBadgeText: {
+  color:
+    theme.success,
+
+  fontSize: 9,
+
+  fontWeight: "800",
+},
+
+evidencePreviewActions: {
+  flexDirection: "row",
+
+  gap: 9,
+
+  marginTop: 12,
+},
+
+evidenceChangeButton: {
+  flex: 1,
+
+  height: 42,
+
+  borderRadius: 11,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  gap: 6,
+
+  backgroundColor:
+    "rgba(139,108,255,0.10)",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(139,108,255,0.20)",
+},
+
+evidenceChangeButtonText: {
+  color:
+    UI.purpleSoft,
+
+  fontSize: 10,
+
+  fontWeight: "800",
+},
+
+evidenceRemoveButton: {
+  flex: 1,
+
+  height: 42,
+
+  borderRadius: 11,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  gap: 6,
+
+  backgroundColor:
+    "rgba(239,68,68,0.07)",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(239,68,68,0.16)",
+},
+
+evidenceRemoveButtonText: {
+  color:
+    theme.error,
+
+  fontSize: 10,
+
+  fontWeight: "800",
+},
+
+evidenceErrorBox: {
+  marginTop: 12,
+
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+
+  borderRadius: 11,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 7,
+
+  backgroundColor:
+    "rgba(239,68,68,0.07)",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(239,68,68,0.16)",
+},
+
+evidenceErrorText: {
+  flex: 1,
+
+  color:
+    theme.error,
+
+  fontSize: 9,
+
+  lineHeight: 14,
+
+  fontWeight: "700",
+},
+
+evidenceSubmitButton: {
+  width: "100%",
+  height: 46,
+
+  marginTop: 12,
+
+  borderRadius: 12,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  gap: 7,
+
+  backgroundColor:
+    theme.secondary,
+},
+
+evidenceSubmitButtonDisabled: {
+  opacity: 0.55,
+},
+
+evidenceSubmitButtonText: {
+  color: "#FFFFFF",
+
+  fontSize: 11,
+
+  fontWeight: "900",
+},
+
+evidenceSuccessOverlay: {
+  flex: 1,
+
+  justifyContent: "center",
+
+  paddingHorizontal: 20,
+
+  backgroundColor:
+    "rgba(4,7,14,0.88)",
+},
+
+evidenceSuccessModal: {
+  padding: 22,
+
+  borderRadius: 22,
+
+  alignItems: "center",
+
+  backgroundColor:
+    theme.surface,
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(34,197,94,0.22)",
+},
+
+evidenceSuccessIcon: {
+  width: 58,
+  height: 58,
+
+  borderRadius: 18,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "rgba(34,197,94,0.10)",
+
+  marginBottom: 14,
+},
+
+evidenceSuccessTitle: {
+  color:
+    theme.textPrimary,
+
+  fontSize: 19,
+
+  fontWeight: "900",
+
+  textAlign: "center",
+},
+
+evidenceSuccessDescription: {
+  color:
+    theme.textSecondary,
+
+  fontSize: 11,
+
+  lineHeight: 18,
+
+  textAlign: "center",
+
+  marginTop: 7,
+},
+
+evidenceSuccessInfo: {
+  width: "100%",
+
+  marginTop: 16,
+
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+
+  borderRadius: 12,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 7,
+
+  backgroundColor:
+    "rgba(139,108,255,0.08)",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(139,108,255,0.16)",
+},
+
+evidenceSuccessInfoText: {
+  flex: 1,
+
+  color:
+    theme.textSecondary,
+
+  fontSize: 9,
+
+  lineHeight: 14,
+
+  fontWeight: "700",
+},
+
+evidenceSuccessButton: {
+  width: "100%",
+  height: 46,
+
+  marginTop: 18,
+
+  borderRadius: 12,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    theme.success,
+},
+
+evidenceSuccessButtonText: {
+  color: "#FFFFFF",
+
+  fontSize: 11,
 
   fontWeight: "900",
 },

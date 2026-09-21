@@ -40,7 +40,15 @@
         }
       ],
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+      "expo-image-picker",
+      {
+        "photosPermission": "Permita que o Axon acesse suas fotos para enviar evidências.",
+        "cameraPermission": "Permita que o Axon use a câmera para registrar evidências.",
+        "microphonePermission": false
+      }
+    ]
     ],
     "experiments": {
       "typedRoutes": true,
