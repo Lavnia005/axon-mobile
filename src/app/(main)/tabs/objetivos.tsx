@@ -6,6 +6,7 @@ import React, {
 
 import {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -22,6 +23,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import {
+  router,
   useFocusEffect,
   useLocalSearchParams,
 } from "expo-router";
@@ -246,6 +248,23 @@ export default function ObjetivosScreen() {
     useState<Task | null>(
       null,
     );
+  const [
+  taskToDelete,
+  setTaskToDelete,
+] =
+  useState<Task | null>(
+    null,
+  );
+
+  const [
+    isDeletingTask,
+    setIsDeletingTask,
+  ] = useState(false);
+
+  const [
+  showDeleteSuccess,
+  setShowDeleteSuccess,
+] = useState(false);
 
   const [
     isLoadingTasks,
@@ -536,6 +555,75 @@ export default function ObjetivosScreen() {
       "todos",
     );
   }
+
+  function editarObjetivo(task: Task) {
+    const groupId =
+      getTaskGroupId(task.group);
+
+    setSelectedTask(null);
+
+    router.push({
+      pathname:
+        "/(main)/grupos/[id]/editar-objetivo",
+      params: {
+        id: groupId,
+        taskId: task._id,
+      },
+    });
+  }
+
+  async function excluirObjetivo(
+  task: Task,
+) {
+  if (!token) {
+    return;
+  }
+
+  try {
+    setIsDeletingTask(true);
+    await taskService.deleteTask(
+      task._id,
+      token,
+    );
+
+    setTasks((currentTasks) =>
+      currentTasks.filter(
+        (currentTask) =>
+          currentTask._id !==
+          task._id,
+      ),
+    );
+
+    setSelectedTask(null);
+    setTaskToDelete(null);
+
+    setShowDeleteSuccess(true);
+  } catch (error) {
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : "Não foi possível excluir o objetivo.";
+
+    if (Platform.OS === "web") {
+      window.alert(message);
+
+      return;
+    }
+
+    Alert.alert(
+      "Não foi possível excluir",
+      message,
+    );
+  } finally {
+    setIsDeletingTask(false);
+  }
+}
+
+function confirmarExclusao(
+  task: Task,
+) {
+  setTaskToDelete(task);
+}
 
   function closeContestModal() {
     setValidationToContest(
@@ -2424,6 +2512,70 @@ export default function ObjetivosScreen() {
                   </View>
                 </View>
 
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={
+                    styles.editTaskButton
+                  }
+                  onPress={() =>
+                    editarObjetivo(
+                      selectedTask,
+                    )
+                  }
+                >
+                  <Ionicons
+                    name="create-outline"
+                    size={18}
+                    color="#CFC5FF"
+                  />
+
+                  <Text
+                    style={
+                      styles.editTaskButtonText
+                    }
+                  >
+                    Editar objetivo
+                  </Text>
+
+                  <Ionicons
+                    name="chevron-forward"
+                    size={17}
+                    color="#8F80D5"
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={
+                    styles.deleteTaskButton
+                  }
+                  onPress={() =>
+                    confirmarExclusao(
+                      selectedTask,
+                    )
+                  }
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={18}
+                    color={theme.error}
+                  />
+
+                  <Text
+                    style={
+                      styles.deleteTaskButtonText
+                    }
+                  >
+                    Excluir objetivo
+                  </Text>
+
+                  <Ionicons
+                    name="chevron-forward"
+                    size={17}
+                    color={theme.error}
+                  />
+                </TouchableOpacity>
+
                 <Text
                   style={
                     styles.modalSectionTitle
@@ -2509,6 +2661,222 @@ export default function ObjetivosScreen() {
             )}
           </ScrollView>
         </SafeAreaView>
+      </Modal>
+
+            {/* CONFIRMAÇÃO DE EXCLUSÃO */}
+
+      <Modal
+        visible={!!taskToDelete}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!isDeletingTask) {
+            setTaskToDelete(null);
+          }
+        }}
+      >
+        <View
+          style={
+            styles.deleteModalOverlay
+          }
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={
+              styles.deleteModalBackground
+            }
+            disabled={isDeletingTask}
+            onPress={() =>
+              setTaskToDelete(null)
+            }
+          />
+
+          <View
+            style={
+              styles.deleteModal
+            }
+          >
+            <View
+              style={
+                styles.deleteModalIcon
+              }
+            >
+              <Ionicons
+                name="trash-outline"
+                size={26}
+                color={theme.error}
+              />
+            </View>
+
+            <Text
+              style={
+                styles.deleteModalTitle
+              }
+            >
+              Excluir objetivo?
+            </Text>
+
+            <Text
+              style={
+                styles.deleteModalDescription
+              }
+            >
+              {taskToDelete
+                ? `O objetivo "${taskToDelete.title}" será excluído permanentemente.`
+                : ""}
+            </Text>
+
+            <Text
+              style={
+                styles.deleteModalWarning
+              }
+            >
+              Essa ação não pode ser
+              desfeita.
+            </Text>
+
+            <View
+              style={
+                styles.deleteModalActions
+              }
+            >
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={isDeletingTask}
+                style={
+                  styles.deleteModalCancelButton
+                }
+                onPress={() =>
+                  setTaskToDelete(null)
+                }
+              >
+                <Text
+                  style={
+                    styles.deleteModalCancelText
+                  }
+                >
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={
+                  isDeletingTask ||
+                  !taskToDelete
+                }
+                style={[
+                  styles.deleteModalConfirmButton,
+
+                  isDeletingTask &&
+                    styles.deleteModalConfirmButtonDisabled,
+                ]}
+                onPress={() => {
+                  if (taskToDelete) {
+                    void excluirObjetivo(
+                      taskToDelete,
+                    );
+                  }
+                }}
+              >
+                {isDeletingTask ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#FFFFFF"
+                  />
+                ) : (
+                  <>
+                    <Ionicons
+                      name="trash-outline"
+                      size={17}
+                      color="#FFFFFF"
+                    />
+
+                    <Text
+                      style={
+                        styles.deleteModalConfirmText
+                      }
+                    >
+                      Excluir
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+            {/* SUCESSO NA EXCLUSÃO */}
+
+      <Modal
+        visible={showDeleteSuccess}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          setShowDeleteSuccess(false)
+        }
+      >
+        <View
+          style={
+            styles.deleteSuccessOverlay
+          }
+        >
+          <View
+            style={
+              styles.deleteSuccessModal
+            }
+          >
+            <View
+              style={
+                styles.deleteSuccessIcon
+              }
+            >
+              <Ionicons
+                name="checkmark-circle"
+                size={29}
+                color={theme.success}
+              />
+            </View>
+
+            <Text
+              style={
+                styles.deleteSuccessTitle
+              }
+            >
+              Objetivo excluído
+            </Text>
+
+            <Text
+              style={
+                styles.deleteSuccessDescription
+              }
+            >
+              O objetivo foi removido com
+              sucesso.
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={
+                styles.deleteSuccessButton
+              }
+              onPress={() =>
+                setShowDeleteSuccess(
+                  false,
+                )
+              }
+            >
+              <Text
+                style={
+                  styles.deleteSuccessButtonText
+                }
+              >
+                Entendi
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
 
       {/* CONTESTAÇÃO */}
@@ -4421,6 +4789,72 @@ const styles =
 
       fontWeight: "900",
     },
+    editTaskButton: {
+  height: 50,
+
+  marginTop: 18,
+
+  paddingHorizontal: 15,
+
+  borderRadius: 14,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 9,
+
+  backgroundColor: "#21183B",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(122, 90, 248, 0.30)",
+},
+
+editTaskButtonText: {
+  flex: 1,
+
+  color: "#CFC5FF",
+
+  fontSize: 12,
+
+  fontWeight: "800",
+},
+
+deleteTaskButton: {
+  height: 50,
+
+  marginTop: 10,
+
+  paddingHorizontal: 15,
+
+  borderRadius: 14,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+
+  gap: 9,
+
+  backgroundColor:
+    "rgba(239, 68, 68, 0.07)",
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(239, 68, 68, 0.20)",
+},
+
+deleteTaskButtonText: {
+  flex: 1,
+
+  color: theme.error,
+
+  fontSize: 12,
+
+  fontWeight: "800",
+},
 
     modalSectionTitle: {
       color:
@@ -4612,6 +5046,243 @@ const styles =
 
       marginTop: 8,
     },
+
+    /*
+ * MODAL DE EXCLUSÃO
+ */
+
+deleteModalOverlay: {
+  flex: 1,
+
+  justifyContent: "center",
+
+  paddingHorizontal: 20,
+
+  backgroundColor:
+    "rgba(4,7,14,0.88)",
+},
+
+deleteModalBackground: {
+  ...StyleSheet.absoluteFillObject,
+},
+
+deleteModal: {
+  zIndex: 2,
+
+  padding: 22,
+
+  borderRadius: 22,
+
+  backgroundColor:
+    theme.surface,
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(239,68,68,0.22)",
+},
+
+deleteModalIcon: {
+  width: 52,
+  height: 52,
+
+  borderRadius: 17,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "rgba(239,68,68,0.10)",
+
+  marginBottom: 14,
+},
+
+deleteModalTitle: {
+  color:
+    theme.textPrimary,
+
+  fontSize: 19,
+
+  fontWeight: "900",
+},
+
+deleteModalDescription: {
+  color:
+    theme.textSecondary,
+
+  fontSize: 12,
+
+  lineHeight: 19,
+
+  marginTop: 7,
+},
+
+deleteModalWarning: {
+  color:
+    theme.error,
+
+  fontSize: 10,
+
+  fontWeight: "800",
+
+  marginTop: 8,
+},
+
+deleteModalActions: {
+  flexDirection: "row",
+
+  gap: 10,
+
+  marginTop: 20,
+},
+
+deleteModalCancelButton: {
+  flex: 1,
+
+  height: 46,
+
+  borderRadius: 12,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    theme.background,
+
+  borderWidth: 1,
+
+  borderColor:
+    theme.border,
+},
+
+deleteModalCancelText: {
+  color:
+    theme.textPrimary,
+
+  fontSize: 12,
+
+  fontWeight: "800",
+},
+
+deleteModalConfirmButton: {
+  flex: 1,
+
+  height: 46,
+
+  borderRadius: 12,
+
+  flexDirection: "row",
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  gap: 7,
+
+  backgroundColor:
+    theme.error,
+},
+
+deleteModalConfirmButtonDisabled: {
+  opacity: 0.55,
+},
+
+deleteModalConfirmText: {
+  color: "#FFFFFF",
+
+  fontSize: 12,
+
+  fontWeight: "900",
+},
+
+deleteSuccessOverlay: {
+  flex: 1,
+
+  justifyContent: "center",
+
+  paddingHorizontal: 20,
+
+  backgroundColor:
+    "rgba(4,7,14,0.88)",
+},
+
+deleteSuccessModal: {
+  padding: 22,
+
+  borderRadius: 22,
+
+  alignItems: "center",
+
+  backgroundColor:
+    theme.surface,
+
+  borderWidth: 1,
+
+  borderColor:
+    "rgba(34,197,94,0.22)",
+},
+
+deleteSuccessIcon: {
+  width: 56,
+  height: 56,
+
+  borderRadius: 18,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    "rgba(34,197,94,0.10)",
+
+  marginBottom: 14,
+},
+
+deleteSuccessTitle: {
+  color:
+    theme.textPrimary,
+
+  fontSize: 19,
+
+  fontWeight: "900",
+
+  textAlign: "center",
+},
+
+deleteSuccessDescription: {
+  color:
+    theme.textSecondary,
+
+  fontSize: 12,
+
+  lineHeight: 19,
+
+  textAlign: "center",
+
+  marginTop: 7,
+},
+
+deleteSuccessButton: {
+  width: "100%",
+
+  height: 46,
+
+  borderRadius: 12,
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor:
+    theme.success,
+
+  marginTop: 20,
+},
+
+deleteSuccessButtonText: {
+  color: "#FFFFFF",
+
+  fontSize: 12,
+
+  fontWeight: "900",
+},
 
     /*
      * CONTESTAÇÃO
