@@ -372,6 +372,14 @@ export default function ObjetivosScreen() {
   );
 
   const [
+  validationActionError,
+  setValidationActionError,
+] = useState<{
+  id: string;
+  message: string;
+} | null>(null);
+
+  const [
     validationToContest,
     setValidationToContest,
   ] =
@@ -1029,6 +1037,7 @@ async function aprovarValidacao(
   }
 
   try {
+    setValidationActionError(null);
     setValidatingSubmissionId(
       validation.id,
     );
@@ -1050,10 +1059,18 @@ async function aprovarValidacao(
         ),
     );
   } catch (error) {
-    console.error(
-      "Erro ao aprovar evidência:",
-      error,
-    );
+  console.error(
+    "Erro ao aprovar evidência:",
+    error,
+  );
+
+  setValidationActionError({
+    id: validation.id,
+    message:
+      error instanceof ApiError
+        ? error.message
+        : "Não foi possível aprovar a evidência.",
+  });
   } finally {
     setValidatingSubmissionId(
       null,
@@ -1077,6 +1094,7 @@ async function aprovarValidacao(
   }
 
   try {
+    setValidationActionError(null);
     setValidatingSubmissionId(
       validation.id,
     );
@@ -1097,11 +1115,19 @@ async function aprovarValidacao(
             validation.id,
         ),
     );
-  } catch (error) {
-    console.error(
-      "Erro ao votar na evidência:",
-      error,
-    );
+   } catch (error) {
+  console.error(
+    "Erro ao votar na evidência:",
+    error,
+  );
+
+  setValidationActionError({
+    id: validation.id,
+    message:
+      error instanceof ApiError
+        ? error.message
+        : "Não foi possível registrar seu voto.",
+  });
   } finally {
     setValidatingSubmissionId(
       null,
@@ -1128,6 +1154,7 @@ function closeContestModal() {
   }
 
   try {
+    setValidationActionError(null);
     setValidatingSubmissionId(
       validationToContest.id,
     );
@@ -1152,11 +1179,20 @@ function closeContestModal() {
 
     closeContestModal();
   } catch (error) {
-    console.error(
-      "Erro ao contestar evidência:",
-      error,
-    );
-  } finally {
+  console.error(
+    "Erro ao contestar evidência:",
+    error,
+  );
+
+  setValidationActionError({
+    id: validationToContest.id,
+    message:
+      error instanceof ApiError
+        ? error.message
+        : "Não foi possível contestar a evidência.",
+  });
+}
+   finally {
     setValidatingSubmissionId(
       null,
     );
@@ -2264,6 +2300,9 @@ function closeContestModal() {
                   /*
                    * VOTAÇÃO
                    */
+                  const isProcessing =
+                  validatingSubmissionId ===
+                  validation.id;
                   if (
                     validation.isDisputed
                   ) {
@@ -2509,19 +2548,25 @@ function closeContestModal() {
                           }
                         >
                           <TouchableOpacity
-                            activeOpacity={
-                              0.85
-                            }
-                            style={
-                              styles.invalidateButton
-                            }
-                            onPress={() => {
-                              void votarValidacao(
-                                validation,
-                                "invalidated",
-                              );
-                            }}
-                          >
+                              activeOpacity={
+                                0.85
+                              }
+                              disabled={
+                                isProcessing
+                              }
+                              style={[
+                                styles.invalidateButton,
+                                isProcessing && {
+                                  opacity: 0.5,
+                                },
+                              ]}
+                              onPress={() => {
+                                void votarValidacao(
+                                  validation,
+                                  "invalidated",
+                                );
+                              }}
+                            >
                             <Ionicons
                               name="close-circle-outline"
                               size={18}
@@ -2543,9 +2588,15 @@ function closeContestModal() {
                             activeOpacity={
                               0.85
                             }
-                            style={
-                              styles.keepValidButton
+                            disabled={
+                              isProcessing
                             }
+                            style={[
+                              styles.keepValidButton,
+                              isProcessing && {
+                                opacity: 0.5,
+                              },
+                            ]}
                             onPress={() => {
                               void votarValidacao(
                                 validation,
@@ -2568,6 +2619,36 @@ function closeContestModal() {
                             </Text>
                           </TouchableOpacity>
                         </View>
+
+                        {validationActionError?.id ===
+  validation.id && (
+  <View
+    style={{
+      marginHorizontal: 12,
+      marginBottom: 12,
+      padding: 10,
+      borderRadius: 10,
+      backgroundColor:
+        "rgba(239,68,68,0.08)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(239,68,68,0.18)",
+    }}
+  >
+    <Text
+      style={{
+        color: theme.error,
+        fontSize: 11,
+        lineHeight: 16,
+      }}
+    >
+      {
+        validationActionError.message
+      }
+    </Text>
+  </View>
+)}
+
                       </View>
                     );
                   }
@@ -2690,14 +2771,22 @@ function closeContestModal() {
                           activeOpacity={
                             0.85
                           }
-                          style={
-                            styles.contestButton
+                          disabled={
+                            isProcessing
                           }
-                          onPress={() =>
-                            setValidationToContest(
-                              validation,
-                            )
-                          }
+                          style={[
+                            styles.contestButton,
+                            isProcessing && {
+                              opacity: 0.5,
+                            },
+                          ]}
+                         onPress={() => {
+                          setValidationActionError(null);
+
+                          setValidationToContest(
+                            validation,
+                          );
+                        }}
                         >
                           <Ionicons
                             name="alert-circle-outline"
@@ -2720,9 +2809,15 @@ function closeContestModal() {
                           activeOpacity={
                             0.85
                           }
-                          style={
-                            styles.approveButton
+                          disabled={
+                            isProcessing
                           }
+                          style={[
+                            styles.approveButton,
+                            isProcessing && {
+                              opacity: 0.5,
+                            },
+                          ]}
                           onPress={() => {
                             void aprovarValidacao(
                               validation,
@@ -2744,6 +2839,36 @@ function closeContestModal() {
                           </Text>
                         </TouchableOpacity>
                       </View>
+
+                        {validationActionError?.id ===
+  validation.id && (
+  <View
+    style={{
+      marginHorizontal: 12,
+      marginBottom: 12,
+      padding: 10,
+      borderRadius: 10,
+      backgroundColor:
+        "rgba(239,68,68,0.08)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(239,68,68,0.18)",
+    }}
+  >
+    <Text
+      style={{
+        color: theme.error,
+        fontSize: 11,
+        lineHeight: 16,
+      }}
+    >
+      {
+        validationActionError.message
+      }
+    </Text>
+  </View>
+)}
+
                     </View>
                   );
                 },
@@ -4212,6 +4337,36 @@ function closeContestModal() {
               }
               /300
             </Text>
+            {validationActionError &&
+  validationToContest &&
+  validationActionError.id ===
+    validationToContest.id && (
+  <View
+    style={{
+      marginTop: 10,
+      padding: 10,
+      borderRadius: 10,
+      backgroundColor:
+        "rgba(239,68,68,0.08)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(239,68,68,0.18)",
+    }}
+  >
+    <Text
+      style={{
+        color: theme.error,
+        fontSize: 11,
+        lineHeight: 16,
+      }}
+    >
+      {
+        validationActionError.message
+      }
+    </Text>
+  </View>
+)}
+            
 
             <View
               style={
