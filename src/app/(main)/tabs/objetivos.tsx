@@ -345,6 +345,16 @@ export default function ObjetivosScreen() {
   ] = useState(false);
 
   const [
+    isRefreshingValidations,
+    setIsRefreshingValidations,
+  ] = useState(false);
+
+  const [
+  validationsError,
+  setValidationsError,
+] = useState("");
+
+  const [
     tasksError,
     setTasksError,
   ] = useState("");
@@ -472,13 +482,27 @@ export default function ObjetivosScreen() {
 
   const carregarValidacoesPendentes =
   useCallback(
-    async () => {
+    async (
+      refreshing = false,
+    ) => {
       if (!token) {
         setPendingSubmissions([]);
+        setValidationsError("");
+        setIsRefreshingValidations(
+          false,
+        );
         return;
       }
 
       try {
+        if (refreshing) {
+          setIsRefreshingValidations(
+            true,
+          );
+        }
+
+        setValidationsError("");
+
         const response =
           await submissionService.getPendingValidations(
             token,
@@ -493,7 +517,19 @@ export default function ObjetivosScreen() {
           error,
         );
 
-        setPendingSubmissions([]);
+        if (error instanceof ApiError) {
+          setValidationsError(
+            error.message,
+          );
+        } else {
+          setValidationsError(
+            "Não foi possível carregar as validações.",
+          );
+        }
+      } finally {
+        setIsRefreshingValidations(
+          false,
+        );
       }
     },
     [token],
@@ -1144,26 +1180,30 @@ function closeContestModal() {
           styles.scrollContent
         }
         refreshControl={
-          viewMode ===
-          "tasks" ? (
-            <RefreshControl
-              refreshing={
-                isRefreshing
-              }
-              onRefresh={() =>
-                carregarTarefas(
-                  true,
-                )
-              }
-              tintColor={
-                theme.primary
-              }
-              colors={[
-                theme.primary,
-              ]}
-            />
-          ) : undefined
-        }
+  <RefreshControl
+    refreshing={
+      viewMode === "tasks"
+        ? isRefreshing
+        : isRefreshingValidations
+    }
+    onRefresh={() => {
+      if (viewMode === "tasks") {
+        void carregarTarefas(true);
+        return;
+      }
+
+      void carregarValidacoesPendentes(
+        true,
+      );
+    }}
+    tintColor={
+      theme.primary
+    }
+    colors={[
+      theme.primary,
+    ]}
+  />
+}
       >
         {/* HEADER */}
 
@@ -2114,8 +2154,71 @@ function closeContestModal() {
           
         ) : (
           <>
-            {filteredValidations.length ===
-            0 ? (
+           {validationsError ? (
+  <View
+    style={
+      styles.simpleState
+    }
+  >
+    <View
+      style={
+        styles.errorIcon
+      }
+    >
+      <Ionicons
+        name="cloud-offline-outline"
+        size={28}
+        color={
+          theme.error
+        }
+      />
+    </View>
+
+    <Text
+      style={
+        styles.stateTitle
+      }
+    >
+      Não conseguimos
+      carregar
+    </Text>
+
+    <Text
+      style={
+        styles.stateDescription
+      }
+    >
+      {validationsError}
+    </Text>
+
+    <TouchableOpacity
+      activeOpacity={
+        0.85
+      }
+      style={
+        styles.retryButton
+      }
+      onPress={() => {
+        void carregarValidacoesPendentes();
+      }}
+    >
+      <Ionicons
+        name="refresh"
+        size={17}
+        color="#FFFFFF"
+      />
+
+      <Text
+        style={
+          styles.retryText
+        }
+      >
+        Tentar novamente
+      </Text>
+    </TouchableOpacity>
+  </View>
+) : filteredValidations.length ===
+0 ? (
               <View
                 style={
                   styles.emptyState
