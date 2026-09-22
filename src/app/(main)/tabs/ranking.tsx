@@ -1196,10 +1196,10 @@ const styles =
       color:
         theme.textPrimary,
 
-      fontSize: 30,
+      fontSize: 23,
       fontWeight: "800",
 
-      letterSpacing: -0.7,
+      letterSpacing: -0.4,
     },
 
     subtitle: {

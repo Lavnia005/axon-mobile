@@ -303,9 +303,10 @@ const styles = StyleSheet.create({
 
   title: {
     color: theme.textPrimary,
-    fontSize: 30,
-    fontWeight: "700",
+    fontSize: 23,
+    fontWeight: "800",
     marginBottom: 4,
+    letterSpacing: -0.4,
   },
 
   subtitle: {

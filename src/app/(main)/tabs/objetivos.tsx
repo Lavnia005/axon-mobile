@@ -4555,11 +4555,12 @@ const styles =
       color:
         theme.textPrimary,
 
-      fontSize: 34,
+      fontSize: 23,
       fontWeight: "800",
 
-      letterSpacing: -1,
+      letterSpacing: -0.4,
     },
+
 
     subtitle: {
       color:
