@@ -20,7 +20,14 @@ export type FinalDecision =
 export type SubmissionUser = {
   _id: string;
   name: string;
-  profileImage?: string | null;
+
+  profileImage?:
+    | string
+    | {
+        url?: string | null;
+        publicId?: string | null;
+      }
+    | null;
 };
 
 export type SubmissionGroup = {

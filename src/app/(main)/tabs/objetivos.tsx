@@ -69,6 +69,7 @@ interface Validation {
   groupId?: string | null;
   time: string;
   userAvatar: string;
+  userProfileImage?: string | null;
   photoUrl: string;
 
   isDisputed?: boolean;
@@ -231,6 +232,26 @@ function formatDeadline(
       minute: "2-digit",
     },
   );
+}
+
+function getSubmissionUserProfileImage(
+  user: TaskSubmission["user"],
+) {
+  if (typeof user === "string") {
+    return null;
+  }
+
+  const image = user.profileImage;
+
+  if (!image) {
+    return null;
+  }
+
+  if (typeof image === "string") {
+    return image;
+  }
+
+  return image.url ?? null;
 }
 
 export default function ObjetivosScreen() {
@@ -669,6 +690,10 @@ export default function ObjetivosScreen() {
           ),
           userAvatar:
             initials || "U",
+          userProfileImage:
+          getSubmissionUserProfileImage(
+            submission.user,
+          ),
           photoUrl:
             submission.evidence.url,
           isDisputed:
@@ -2400,20 +2425,33 @@ function closeContestModal() {
                               styles.validationUserRow
                             }
                           >
-                            <View
-                              style={
-                                styles.votingAvatar
-                              }
+                           <View
+                              style={[
+                                styles.avatar,
+                                styles.votingAvatar,
+                              ]}
                             >
-                              <Text
-                                style={
-                                  styles.votingAvatarText
-                                }
-                              >
-                                {
-                                  validation.userAvatar
-                                }
-                              </Text>
+                              {validation.userProfileImage ? (
+                                <Image
+                                  source={{
+                                    uri:
+                                      validation.userProfileImage,
+                                  }}
+                                  style={
+                                    styles.avatarImage
+                                  }
+                                />
+                              ) : (
+                                <Text
+                                  style={
+                                    styles.votingAvatarText
+                                  }
+                                >
+                                  {
+                                    validation.userAvatar
+                                  }
+                                </Text>
+                              )}
                             </View>
 
                             <View
@@ -2676,20 +2714,32 @@ function closeContestModal() {
                           }
                         >
                           <View
-                            style={
-                              styles.avatar
-                            }
-                          >
-                            <Text
                               style={
-                                styles.avatarText
+                                styles.avatar
                               }
-                            >
-                              {
-                                validation.userAvatar
-                              }
-                            </Text>
-                          </View>
+>
+                              {validation.userProfileImage ? (
+                                <Image
+                                  source={{
+                                    uri:
+                                      validation.userProfileImage,
+                                  }}
+                                  style={
+                                    styles.avatarImage
+                                  }
+                                />
+                              ) : (
+                                <Text
+                                  style={
+                                    styles.avatarText
+                                  }
+                                >
+                                  {
+                                    validation.userAvatar
+                                  }
+                                </Text>
+                              )}
+                            </View>
 
                           <View
                             style={{
@@ -5471,6 +5521,11 @@ historyLinkSubtitle: {
       fontSize: 11,
 
       fontWeight: "900",
+    },
+    avatarImage: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 999,
     },
 
     validationUserName: {
