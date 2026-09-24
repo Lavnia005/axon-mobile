@@ -32,7 +32,7 @@ type Tab = {
 
 const tabs: Tab[] = [
   {
-    label: "Home",
+    label: "Início",
     icon: "home-outline",
     iconActive: "home",
     route: "/tabs/home",
