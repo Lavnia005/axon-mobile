@@ -1,50 +1,48 @@
-# Welcome to your Expo app 👋
+# Axon — Aplicativo Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Axon** é uma aplicação mobile gamificada desenvolvida para incentivar o foco, a disciplina e a evolução pessoal por meio da organização de objetivos, interação em grupos e acompanhamento de progresso.
 
-## Get started
+A proposta é transformar a realização de tarefas em uma experiência colaborativa, na qual os usuários podem registrar suas atividades, compartilhar evidências e acompanhar seu desempenho por meio de pontuações e rankings.
 
-1. Install dependencies
+O projeto foi desenvolvido para a **45ª Feira Tecnológica do Inatel (FETIN)**.
 
-   ```bash
-   npm install
-   ```
+## Sobre o projeto
 
-2. Start the app
+O Axon busca oferecer uma experiência de produtividade que vai além de uma lista convencional de tarefas. A aplicação combina recursos de organização pessoal com elementos de gamificação e colaboração, incentivando a constância e o comprometimento dos usuários.
 
-   ```bash
-   npx expo start
-   ```
+## Funcionalidades
 
-In the output, you'll find options to open the app in a
+* **Autenticação de usuários:** acesso à plataforma por meio de uma conta pessoal.
+* **Gerenciamento de objetivos:** criação e acompanhamento de tarefas e objetivos.
+* **Grupos:** interação com outros usuários em ambientes colaborativos.
+* **Envio de evidências:** registro da realização de atividades por meio de evidências.
+* **Validação e contestação:** mecanismos de avaliação das evidências enviadas.
+* **Pontuação e ranking:** acompanhamento do desempenho individual e coletivo.
+* **Integração com backend:** comunicação com uma API responsável pelo processamento e armazenamento dos dados.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Tecnologias
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+* **React Native** — desenvolvimento da aplicação mobile.
+* **Expo** — ferramentas e ambiente de desenvolvimento.
+* **TypeScript** — tipagem estática e organização do código.
+* **Expo Router** — navegação entre telas.
+* **Context API** — gerenciamento de estado compartilhado.
+* **SecureStore** — armazenamento seguro de informações de autenticação.
 
-## Get a fresh project
+## Arquitetura
 
-When you're ready, run:
+A aplicação mobile atua como camada de interface e interação com o usuário, consumindo os serviços disponibilizados pelo backend do Axon.
 
-```bash
-npm run reset-project
-```
+A organização do projeto busca separar responsabilidades entre telas, componentes, navegação, contextos e comunicação com a API, favorecendo a manutenção e a evolução da aplicação.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Repositórios relacionados
 
-## Learn more
+* **Frontend:** este repositório.
+* **Backend:** [Axon Back](https://github.com/RafaelM007/Axon_back)
+* **Documentação da API:** [Swagger — Axon](https://axon-back.onrender.com/api-docs)
 
-To learn more about developing your project with Expo, look at the following resources:
+## Equipe e desenvolvimento
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+O Axon foi desenvolvido como um projeto colaborativo para a 45ª FETIN, envolvendo o desenvolvimento de uma aplicação mobile e de sua infraestrutura backend.
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+**AXON — FOCO • DISCIPLINA • EVOLUÇÃO**
